@@ -17,9 +17,6 @@ export default function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <footer className="py-4 text-center text-xs text-slate-500">
-        <Link to="/">Home</Link>
-      </footer>
     </div>
   )
 }
