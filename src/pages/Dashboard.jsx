@@ -1,10 +1,5 @@
-
 import { useState } from "react";
-import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User } from "lucide-react";
-
-// Dark themed dashboard inspired by the first reference (sidebar + modular cards)
-// TailwindCSS required. Paste this component into a Vite/CRA project with Tailwind set up.
-// Optional: lucide-react for icons → `npm i lucide-react`
+import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, BookOpen, Target, TrendingUp, Mail, CheckCircle, Clock, AlertCircle } from "lucide-react";
 
 export default function DarkDashboard() {
   const [dark, setDark] = useState(true);
@@ -16,6 +11,8 @@ export default function DarkDashboard() {
     { icon: <Building2 size={18} />, label: "Companies" },
     { icon: <FileText size={18} />, label: "Quizzes" },
     { icon: <BarChart3 size={18} />, label: "Reports" },
+    { icon: <Calendar size={18} />, label: "Schedule" },
+    { icon: <Mail size={18} />, label: "Applications" },
   ];
 
   return (
@@ -52,16 +49,13 @@ export default function DarkDashboard() {
               </button>
 
               <div className="relative">
-           
-                
-          <button
-  onClick={() => setOpenUser((o) => !o)}
-  className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-2 py-1.5 hover:bg-slate-800"
->
-  <span className="text-lg">👤</span>
-  <span className="text-sm">Profile</span>
-</button>
-               
+                <button
+                  onClick={() => setOpenUser((o) => !o)}
+                  className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-2 py-1.5 hover:bg-slate-800"
+                >
+                  <span className="text-lg">👤</span>
+                  <span className="text-sm">Profile</span>
+                </button>
 
                 {openUser && (
                   <div className="absolute right-0 mt-2 w-44 overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shadow-xl">
@@ -121,10 +115,13 @@ export default function DarkDashboard() {
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <KPI title="Coding Problems" value="248" sub="+12 this week" />
                 <KPI title="Quizzes Attempted" value="18" sub="Avg 76%" />
-                <KPI title="Upcoming Quizzes" value="02" sub="Next: 25 Aug" />
-                <KPI title="Companies Followed" value="07" sub="3 hiring now" />
+                <KPI title="Upcoming Drives" value="02" sub="Next: 25 Aug" />
+                <KPI title="Companies Applied" value="07" sub="3 responses" />
               </div>
             </section>
+
+            {/* Application Status */}
+            <ApplicationStatus />
 
             {/* Two columns: Activity + Charts */}
             <section className="grid gap-6 lg:grid-cols-3">
@@ -133,7 +130,8 @@ export default function DarkDashboard() {
                 <Card title="Recent Activity">
                   <ActivityItem icon={<Code2 size={16} />} title="Solved 3 Medium DSA questions" meta="Today • 14:20" />
                   <ActivityItem icon={<FileText size={16} />} title="Quiz: DBMS Basics submitted" meta="Yesterday • Score 82%" />
-                  <ActivityItem icon={<Building2 size={16} />} title="Viewed company-wise questions (Wipro)" meta="22 Aug • 18:05" />
+                  <ActivityItem icon={<Building2 size={16} />} title="Applied for Microsoft SWE role" meta="22 Aug • 18:05" />
+                  <ActivityItem icon={<Mail size={16} />} title="Received response from Amazon" meta="21 Aug • 09:30" />
                 </Card>
 
                 <Card title="Company-wise Questions">
@@ -143,6 +141,8 @@ export default function DarkDashboard() {
                       { name: "Infosys", count: 52 },
                       { name: "Wipro", count: 33 },
                       { name: "Accenture", count: 41 },
+                      { name: "Microsoft", count: 78 },
+                      { name: "Amazon", count: 65 },
                     ].map((c) => (
                       <div key={c.name} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2">
                         <span>{c.name}</span>
@@ -153,27 +153,29 @@ export default function DarkDashboard() {
                 </Card>
               </div>
 
-              {/* Chart Placeholder */}
-              <Card title="Performance (Last 6 Quizzes)">
-                <div className="h-48 rounded-xl border border-slate-800 bg-slate-900/60 grid place-content-center text-slate-400 text-sm">
-                  {/* Replace with Recharts later */}
-                  <span>Chart placeholder</span>
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-slate-400">
-                  <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-2">
-                    <p className="text-slate-300">Best</p>
-                    <p className="text-lg font-semibold">92%</p>
+              {/* Right Column */}
+              <div className="space-y-6">
+                {/* Upcoming Drives */}
+                <Card title="Upcoming Drives">
+                  <div className="space-y-3">
+                    <DriveItem company="Microsoft" date="Aug 28" time="10:00 AM" type="Coding Test" />
+                    <DriveItem company="Amazon" date="Sep 2" time="11:30 AM" type="Virtual Interview" />
                   </div>
-                  <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-2">
-                    <p className="text-slate-300">Average</p>
-                    <p className="text-lg font-semibold">76%</p>
+                  <button className="mt-4 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm hover:bg-slate-800 flex items-center justify-center gap-2">
+                    <Calendar size={16} /> View Full Schedule
+                  </button>
+                </Card>
+
+                {/* Skill Progress */}
+                <Card title="Skill Progress">
+                  <div className="space-y-4">
+                    <SkillProgressItem skill="Data Structures" progress={75} />
+                    <SkillProgressItem skill="Algorithms" progress={65} />
+                    <SkillProgressItem skill="DBMS" progress={80} />
+                    <SkillProgressItem skill="Communication" progress={60} />
                   </div>
-                  <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-2">
-                    <p className="text-slate-300">Streak</p>
-                    <p className="text-lg font-semibold">4 days</p>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              </div>
             </section>
 
             {/* Quick actions */}
@@ -232,6 +234,73 @@ function ActionCard({ icon, title, desc, btn }) {
       <p className="text-sm text-slate-400">{desc}</p>
       <div className="mt-3">
         <button className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm hover:bg-slate-800">{btn}</button>
+      </div>
+    </div>
+  );
+}
+
+// New Components for Placement Portal
+
+function ApplicationStatus() {
+  const statuses = [
+    { status: "Applied", count: 12, color: "bg-blue-500", icon: <Mail size={14} /> },
+    { status: "Under Review", count: 8, color: "bg-yellow-500", icon: <Clock size={14} /> },
+    { status: "Interview", count: 4, color: "bg-purple-500", icon: <Calendar size={14} /> },
+    { status: "Rejected", count: 2, color: "bg-red-500", icon: <AlertCircle size={14} /> },
+    { status: "Offered", count: 1, color: "bg-green-500", icon: <CheckCircle size={14} /> },
+  ];
+
+  return (
+    <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+      <h3 className="font-semibold text-slate-100 mb-4">Application Status</h3>
+      <div className="grid grid-cols-5 gap-2 mb-4">
+        {statuses.map((item, index) => (
+          <div key={index} className="text-center">
+            <div className="flex justify-center mb-2">
+              <div className={`p-2 rounded-full ${item.color} bg-opacity-20 text-${item.color.split('-')[1]}-400`}>
+                {item.icon}
+              </div>
+            </div>
+            <p className="text-lg font-semibold mt-1">{item.count}</p>
+            <p className="text-xs text-slate-400">{item.status}</p>
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-between text-xs text-slate-400 pt-2 border-t border-slate-800">
+        <span>Total Applications: 27</span>
+        <span>Success Rate: 12%</span>
+      </div>
+    </section>
+  );
+}
+
+function DriveItem({ company, date, time, type }) {
+  return (
+    <div className="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-900/60">
+      <div>
+        <p className="font-medium">{company}</p>
+        <p className="text-xs text-slate-400">{type}</p>
+      </div>
+      <div className="text-right">
+        <p className="font-medium">{date}</p>
+        <p className="text-xs text-slate-400">{time}</p>
+      </div>
+    </div>
+  );
+}
+
+function SkillProgressItem({ skill, progress }) {
+  return (
+    <div>
+      <div className="flex justify-between text-sm mb-1">
+        <span>{skill}</span>
+        <span className="text-slate-400">{progress}%</span>
+      </div>
+      <div className="h-2 bg-slate-800 rounded-full">
+        <div 
+          className="h-2 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full" 
+          style={{ width: `${progress}%` }}
+        ></div>
       </div>
     </div>
   );
