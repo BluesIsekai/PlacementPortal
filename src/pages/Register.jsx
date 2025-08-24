@@ -129,7 +129,7 @@ export default function Register() {
             {loading ? 'Creating…' : 'Create account'}
           </button>
           <div className="text-center">
-            <Link to="/" className={styles.link}>
+            <Link to="/login" className={styles.link}>
               Already have an account? Login
             </Link>
           </div>
