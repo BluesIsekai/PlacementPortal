@@ -54,11 +54,12 @@ export default function DarkDashboard() {
               <div className="relative">
            
                 
-                   <button
-                onClick={() => setOpenUser((o) => !o)}
-                 className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-2 py-1.5 hover:bg-slate-800"
-      >
+          <button
+  onClick={() => setOpenUser((o) => !o)}
+  className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-2 py-1.5 hover:bg-slate-800"
+>
   <span className="text-lg">👤</span>
+  <span className="text-sm">Profile</span>
 </button>
                
 
