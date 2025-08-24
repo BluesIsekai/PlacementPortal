@@ -23,9 +23,9 @@ const Profile = () => {
     graduationYear: "2024",
     cgpa: "9.2",
     resumeLink: "/resume.pdf",
-    linkedin: "https://linkedin.com/in/user",
-    github: "https://github.com/user",
-    portfolio: "https://user.dev",
+    linkedin: "https://linkedin.com/in/user/exmple",
+    github: "https://github.com/user/example",
+    portfolio: "https://example.dev",
     bio: "Passionate computer science student with interest in web development and machine learning. Actively preparing for campus placements.",
     skills: [
       { name: "JavaScript", level: 90 },
