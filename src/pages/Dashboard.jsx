@@ -1,10 +1,7 @@
-
 import { useState } from "react";
 import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User } from "lucide-react";
 
-// Dark themed dashboard inspired by the first reference (sidebar + modular cards)
-// TailwindCSS required. Paste this component into a Vite/CRA project with Tailwind set up.
-// Optional: lucide-react for icons → `npm i lucide-react`
+
 
 export default function DarkDashboard() {
   const [dark, setDark] = useState(true);
@@ -52,14 +49,15 @@ export default function DarkDashboard() {
               </button>
 
               <div className="relative">
-           
-                
-                   <button
-                onClick={() => setOpenUser((o) => !o)}
-                 className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-2 py-1.5 hover:bg-slate-800"
-      >
+           <button
+  onClick={() => setOpenUser((o) => !o)}
+  className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-2 py-1.5 hover:bg-slate-800"
+>
   <span className="text-lg">👤</span>
+  <span className="text-sm">Profile</span>
 </button>
+                
+     
                
 
                 {openUser && (
