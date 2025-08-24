@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { auth, isFirebaseConfigured } from '../lib/firebase'
 
 // Inline styles (Tailwind class strings) grouped for readability
 const styles = {
@@ -33,14 +35,32 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
 
-  const onSubmit = (e) => {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const onSubmit = async (e) => {
     e.preventDefault()
-    // TODO: replace with real auth
-    navigate('/dashboard')
+    setError('')
+    setLoading(true)
+    try {
+      await signInWithEmailAndPassword(auth, email, password)
+      navigate('/dashboard')
+    } catch (err) {
+      const msg = err?.message || 'Login failed'
+      setError(msg)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className={styles.root}>
+      {!isFirebaseConfigured && (
+        <div className="absolute top-2 left-1/2 z-20 w-[90%] max-w-xl -translate-x-1/2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          Firebase is not configured. Copy .env.example to .env and set your
+          VITE_FIREBASE_* keys, then restart the dev server.
+        </div>
+      )}
       <div className={styles.preview}>
         <div className={styles.previewOverlay}>
           <h1 className={styles.title}>Placement Portal</h1>
@@ -58,6 +78,11 @@ export default function Login() {
       <div className={styles.formWrap}>
         <form className={styles.form} onSubmit={onSubmit}>
           <h2 className={styles.heading}>Login</h2>
+          {error && (
+            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
+            </div>
+          )}
           <div>
             <label className={styles.label}>Email</label>
             <input
@@ -91,8 +116,8 @@ export default function Login() {
               </button>
             </div>
           </div>
-          <button type="submit" className={styles.submit}>
-            Login
+          <button type="submit" className={styles.submit} disabled={loading}>
+            {loading ? 'Logging in…' : 'Login'}
           </button>
 
           <div className={styles.actions}>
