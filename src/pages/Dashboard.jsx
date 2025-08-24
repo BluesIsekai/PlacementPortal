@@ -1,9 +1,13 @@
-import { useState } from "react";
-import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, BookOpen, Target, TrendingUp, Mail, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, Mail, X, Menu, ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
+import Footer from "./Footer"; // Imported the Footer component
 
-export default function DarkDashboard() {
+const PlacementPortalDashboard = () => {
   const [dark, setDark] = useState(true);
   const [openUser, setOpenUser] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const profileRef = useRef(null);
 
   const navItems = [
     { icon: <LayoutDashboard size={18} />, label: "Dashboard" },
@@ -15,20 +19,41 @@ export default function DarkDashboard() {
     { icon: <Mail size={18} />, label: "Applications" },
   ];
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setOpenUser(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className={dark ? "dark" : ""}>
-      <div className="min-h-screen bg-slate-950 text-slate-100 antialiased">
+      <div className="min-h-screen bg-slate-950 text-slate-100 antialiased flex flex-col">
         {/* Top Bar */}
         <header className="sticky top-0 z-30 border-b border-slate-800/60 bg-slate-950/70 backdrop-blur">
           <div className="mx-auto max-w-7xl flex items-center justify-between px-4 py-3">
-            {/* Brand */}
+            {/* Brand and Mobile Menu Button */}
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 ring-1 ring-white/10 grid place-content-center font-bold">
-                PP
-              </div>
-              <div className="leading-tight">
-                <p className="font-semibold">Placement Portal</p>
-                <p className="text-xs text-slate-400">Student Dashboard</p>
+              <button 
+                className="md:hidden"
+                onClick={() => setMobileSidebarOpen(true)}
+              >
+                <Menu size={24} />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 ring-1 ring-white/10 grid place-content-center font-bold">
+                  PP
+                </div>
+                <div className="leading-tight">
+                  <p className="font-semibold">Placement Portal</p>
+                  <p className="text-xs text-slate-400">Student Dashboard</p>
+                </div>
               </div>
             </div>
 
@@ -48,23 +73,28 @@ export default function DarkDashboard() {
                 <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-indigo-600 text-[10px] grid place-content-center">3</span>
               </button>
 
-              <div className="relative">
+              <div
+                className="relative"
+                ref={profileRef}
+                onMouseEnter={() => setOpenUser(true)}
+              >
                 <button
-                  onClick={() => setOpenUser((o) => !o)}
                   className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-2 py-1.5 hover:bg-slate-800"
                 >
                   <span className="text-lg">👤</span>
-                  <span className="text-sm">Profile</span>
+                  <ChevronDown size={16} className="text-slate-400" />
                 </button>
 
                 {openUser && (
-                  <div className="absolute right-0 mt-2 w-44 overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shadow-xl">
-                    <button className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-slate-800">
+                  <div
+                    className="absolute right-0 mt-2 w-44 overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shadow-xl"
+                  >
+                    <Link
+                      to="/profile"
+                      className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-slate-800"
+                    >
                       <User size={16} /> Profile
-                    </button>
-                    <button className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-slate-800">
-                      <Settings size={16} /> Settings
-                    </button>
+                    </Link>
                     <div className="h-px bg-slate-800" />
                     <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-rose-300 hover:bg-slate-800">
                       <LogOut size={16} /> Logout
@@ -77,42 +107,33 @@ export default function DarkDashboard() {
         </header>
 
         {/* Shell */}
-        <div className="mx-auto grid max-w-7xl grid-cols-1 md:grid-cols-[240px_1fr] gap-6 px-4 py-6">
-          {/* Sidebar */}
-          <aside className="h-fit rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
-            <nav className="space-y-1">
-              {navItems.map((item, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
-                >
-                  <span className="opacity-90">{item.icon}</span>
-                  {item.label}
-                </a>
-              ))}
-            </nav>
-
-            <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900 p-3">
-              <p className="text-xs uppercase tracking-wider text-slate-400">Quick Filters</p>
-              <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-                <button className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 hover:bg-slate-800">DSA</button>
-                <button className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 hover:bg-slate-800">Aptitude</button>
-                <button className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 hover:bg-slate-800">TCS</button>
-                <button className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 hover:bg-slate-800">Infosys</button>
-              </div>
-            </div>
+        <div className="mx-auto grid max-w-7xl grid-cols-1 md:grid-cols-[240px_1fr] gap-6 px-4 py-6 flex-grow">
+          {/* Sidebar for desktop */}
+          <aside className="hidden md:block h-fit rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
+            <DesktopSidebar navItems={navItems} />
           </aside>
 
-          {/* Main */}
+          {/* Mobile sidebar overlay */}
+          {mobileSidebarOpen && (
+            <div className="fixed inset-0 z-40 bg-black/70 md:hidden" onClick={() => setMobileSidebarOpen(false)}>
+              <div className="absolute left-0 top-0 h-full w-64 bg-slate-900 p-4" onClick={e => e.stopPropagation()}>
+                <button className="absolute right-4 top-4" onClick={() => setMobileSidebarOpen(false)}>
+                  <X size={24} />
+                </button>
+                <DesktopSidebar navItems={navItems} />
+              </div>
+            </div>
+          )}
+
+          {/* Main Content */}
           <main className="space-y-6">
             {/* Greeting */}
             <section className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950 p-5">
               <h1 className="text-xl font-semibold">Welcome back, Kunj 👋</h1>
-              <p className="mt-1 text-sm text-slate-400">Here’s your placement prep snapshot.</p>
+              <p className="mt-1 text-sm text-slate-400">Here's your placement prep snapshot.</p>
 
-              {/* KPIs */}
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {/* KPIs - Responsive grid */}
+              <div className="mt-4 grid gap-4 grid-cols-2 lg:grid-cols-4">
                 <KPI title="Coding Problems" value="248" sub="+12 this week" />
                 <KPI title="Quizzes Attempted" value="18" sub="Avg 76%" />
                 <KPI title="Upcoming Drives" value="02" sub="Next: 25 Aug" />
@@ -135,7 +156,7 @@ export default function DarkDashboard() {
                 </Card>
 
                 <Card title="Company-wise Questions">
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-3 grid-cols-2">
                     {[
                       { name: "TCS", count: 64 },
                       { name: "Infosys", count: 52 },
@@ -178,76 +199,95 @@ export default function DarkDashboard() {
               </div>
             </section>
 
+            {/* Interview Prep Resources */}
+            <InterviewResources />
+
             {/* Quick actions */}
-            <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               <ActionCard icon={<Code2 size={18} />} title="Practice Coding" desc="Filter by difficulty & topic" btn="Browse" />
               <ActionCard icon={<FileText size={18} />} title="Take a Quiz" desc="Timed with instant scorecard" btn="Start" />
               <ActionCard icon={<Building2 size={18} />} title="Explore Companies" desc="Interview experiences & Qs" btn="Explore" />
             </section>
           </main>
         </div>
+
+        {/* Footer */}
+        <Footer />
       </div>
     </div>
   );
-}
+};
 
-function KPI({ title, value, sub }) {
+// Extracted Sidebar Component
+const DesktopSidebar = ({ navItems }) => {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-      <p className="text-xs text-slate-400">{title}</p>
-      <p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p>
-      <p className="text-xs text-slate-500">{sub}</p>
-    </div>
-  );
-}
+    <>
+      <nav className="space-y-1">
+        {navItems.map((item, i) => (
+          <a
+            key={i}
+            href="#"
+            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+          >
+            <span className="opacity-90">{item.icon}</span>
+            {item.label}
+          </a>
+        ))}
+        <Link
+          to="/settings"
+          className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+        >
+          <span className="opacity-90"><Settings size={18} /></span>
+          Settings
+        </Link>
+      </nav>
 
-function Card({ title, children }) {
+      <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900 p-3">
+        <p className="text-xs uppercase tracking-wider text-slate-400">Quick Filters</p>
+        <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+          <button className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 hover:bg-slate-800">DSA</button>
+          <button className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 hover:bg-slate-800">Aptitude</button>
+          <button className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 hover:bg-slate-800">TCS</button>
+          <button className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 hover:bg-slate-800">Infosys</button>
+        </div>
+      </div>
+    </>
+  );
+};
+
+// New Interview Resources Component
+const InterviewResources = () => {
+  const resources = [
+    { title: "Resume Builder", desc: "Create an ATS-friendly resume", icon: <FileText size={20} /> },
+    { title: "Mock Interviews", desc: "Practice with AI or peers", icon: <User size={20} /> },
+    { title: "Interview Questions", desc: "Company-specific questions", icon: <FileText size={20} /> },
+    { title: "Placement Papers", desc: "Previous year questions", icon: <BarChart3 size={20} /> },
+  ];
+
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-semibold text-slate-100">{title}</h3>
+    <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+      <h3 className="font-semibold text-slate-100 mb-4">Interview Preparation Resources</h3>
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        {resources.map((resource, index) => (
+          <div key={index} className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 hover:bg-slate-800/40 transition-colors cursor-pointer">
+            <div className="text-indigo-400 mb-2">{resource.icon}</div>
+            <h4 className="font-medium text-sm mb-1">{resource.title}</h4>
+            <p className="text-xs text-slate-400">{resource.desc}</p>
+          </div>
+        ))}
       </div>
-      {children}
-    </div>
+    </section>
   );
-}
+};
 
-function ActivityItem({ icon, title, meta }) {
-  return (
-    <div className="flex items-start gap-3 rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2">
-      <div className="mt-0.5 text-slate-300">{icon}</div>
-      <div>
-        <p className="text-sm">{title}</p>
-        <p className="text-xs text-slate-500">{meta}</p>
-      </div>
-    </div>
-  );
-}
-
-function ActionCard({ icon, title, desc, btn }) {
-  return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-      <div className="mb-2 flex items-center gap-2 text-slate-200">
-        {icon}
-        <h4 className="font-medium">{title}</h4>
-      </div>
-      <p className="text-sm text-slate-400">{desc}</p>
-      <div className="mt-3">
-        <button className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm hover:bg-slate-800">{btn}</button>
-      </div>
-    </div>
-  );
-}
-
-// New Components for Placement Portal
-
-function ApplicationStatus() {
+// Application Status Component
+const ApplicationStatus = () => {
   const statuses = [
     { status: "Applied", count: 12, color: "bg-blue-500", icon: <Mail size={14} /> },
-    { status: "Under Review", count: 8, color: "bg-yellow-500", icon: <Clock size={14} /> },
+    { status: "Under Review", count: 8, color: "bg-yellow-500", icon: <Settings size={14} /> },
     { status: "Interview", count: 4, color: "bg-purple-500", icon: <Calendar size={14} /> },
-    { status: "Rejected", count: 2, color: "bg-red-500", icon: <AlertCircle size={14} /> },
-    { status: "Offered", count: 1, color: "bg-green-500", icon: <CheckCircle size={14} /> },
+    { status: "Rejected", count: 2, color: "bg-red-500", icon: <X size={14} /> },
+    { status: "Offered", count: 1, color: "bg-green-500", icon: <User size={14} /> },
   ];
 
   return (
@@ -262,7 +302,7 @@ function ApplicationStatus() {
               </div>
             </div>
             <p className="text-lg font-semibold mt-1">{item.count}</p>
-            <p className="text-xs text-slate-400">{item.status}</p>
+            <p className="text-xs text-slate-500">{item.status}</p>
           </div>
         ))}
       </div>
@@ -272,9 +312,10 @@ function ApplicationStatus() {
       </div>
     </section>
   );
-}
+};
 
-function DriveItem({ company, date, time, type }) {
+// Drive Item Component
+const DriveItem = ({ company, date, time, type }) => {
   return (
     <div className="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-900/60">
       <div>
@@ -287,9 +328,10 @@ function DriveItem({ company, date, time, type }) {
       </div>
     </div>
   );
-}
+};
 
-function SkillProgressItem({ skill, progress }) {
+// Skill Progress Component
+const SkillProgressItem = ({ skill, progress }) => {
   return (
     <div>
       <div className="flex justify-between text-sm mb-1">
@@ -304,4 +346,58 @@ function SkillProgressItem({ skill, progress }) {
       </div>
     </div>
   );
-}
+};
+
+// KPI Component
+const KPI = ({ title, value, sub }) => {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+      <p className="text-xs text-slate-400">{title}</p>
+      <p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p>
+      <p className="text-xs text-slate-500">{sub}</p>
+    </div>
+  );
+};
+
+// Card Component
+const Card = ({ title, children }) => {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="font-semibold text-slate-100">{title}</h3>
+      </div>
+      {children}
+    </div>
+  );
+};
+
+// Activity Item Component
+const ActivityItem = ({ icon, title, meta }) => {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2">
+      <div className="mt-0.5 text-slate-300">{icon}</div>
+      <div>
+        <p className="text-sm">{title}</p>
+        <p className="text-xs text-slate-500">{meta}</p>
+      </div>
+    </div>
+  );
+};
+
+// Action Card Component
+const ActionCard = ({ icon, title, desc, btn }) => {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+      <div className="mb-2 flex items-center gap-2 text-slate-200">
+        {icon}
+        <h4 className="font-medium">{title}</h4>
+      </div>
+      <p className="text-sm text-slate-400">{desc}</p>
+      <div className="mt-3">
+        <button className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm hover:bg-slate-800">{btn}</button>
+      </div>
+    </div>
+  );
+};
+
+export default PlacementPortalDashboard;
