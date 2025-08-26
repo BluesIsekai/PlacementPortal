@@ -1,23 +1,92 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { auth, isFirebaseConfigured } from '../lib/firebase'
+import {
+  Sun,
+  Moon,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Sparkles,
+  Shield,
+  UserPlus,
+} from 'lucide-react'
 
-const styles = {
-  root: 'min-h-screen grid md:grid-cols-2',
-  panel:
-    "relative hidden bg-slate-900 text-white md:block bg-[url('/vite.svg')] bg-no-repeat bg-center bg-[length:220px]",
-  overlay: 'absolute inset-0 bg-slate-900/70 p-8 flex flex-col justify-center',
-  title: 'text-3xl font-bold md:text-4xl',
-  formWrap: 'flex items-center justify-center p-6',
-  form: 'w-full max-w-sm space-y-4',
-  heading: 'text-center text-2xl font-semibold',
-  label: 'mb-1 block text-sm',
-  input:
-    'w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500',
-  submit:
-    'w-full inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 transition-colors',
-  link: 'text-indigo-600 hover:underline text-sm',
+// Theme configuration - same as Login page
+const themes = {
+  light: {
+    root: 'min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50',
+    leftPanel:
+      'relative hidden lg:flex lg:flex-col lg:justify-center lg:items-center bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-12 text-white overflow-hidden',
+    rightPanel:
+      'flex flex-col justify-center px-6 py-12 lg:px-8 bg-white/80 backdrop-blur-sm',
+    card: 'mx-auto w-full max-w-md space-y-8 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 p-8',
+    title: 'text-4xl lg:text-5xl font-bold text-white mb-6',
+    subtitle: 'text-lg text-white/90 mb-8 max-w-md',
+    feature: 'flex items-center space-x-3 text-white/80 mb-4',
+    heading: 'text-3xl font-bold text-gray-900 text-center mb-2',
+    subheading: 'text-gray-600 text-center mb-8',
+    label: 'block text-sm font-medium text-gray-700 mb-2',
+    input:
+      'w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/80',
+    button:
+      'w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
+    themeToggle:
+      'fixed top-6 right-6 p-3 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition-all duration-200 z-50',
+    error:
+      'bg-red-50 border border-red-200 text-red-800 rounded-xl p-3 text-sm',
+    warning:
+      'bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3 text-sm',
+  },
+  dark: {
+    root: 'min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black',
+    leftPanel:
+      'relative hidden lg:flex lg:flex-col lg:justify-center lg:items-center bg-gradient-to-br from-slate-800 via-purple-900 to-indigo-900 p-12 text-white overflow-hidden',
+    rightPanel:
+      'flex flex-col justify-center px-6 py-12 lg:px-8 bg-gray-900/80 backdrop-blur-sm',
+    card: 'mx-auto w-full max-w-md space-y-8 bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700/50 p-8',
+    title: 'text-4xl lg:text-5xl font-bold text-white mb-6',
+    subtitle: 'text-lg text-gray-300 mb-8 max-w-md',
+    feature: 'flex items-center space-x-3 text-gray-300 mb-4',
+    heading: 'text-3xl font-bold text-white text-center mb-2',
+    subheading: 'text-gray-400 text-center mb-8',
+    label: 'block text-sm font-medium text-gray-300 mb-2',
+    input:
+      'w-full px-4 py-3 border border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400',
+    button:
+      'w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-800',
+    themeToggle:
+      'fixed top-6 right-6 p-3 rounded-full bg-gray-800/60 backdrop-blur-sm border border-gray-700 text-gray-300 hover:bg-gray-700/60 transition-all duration-200 z-50',
+    error:
+      'bg-red-900/50 border border-red-700 text-red-300 rounded-xl p-3 text-sm',
+    warning:
+      'bg-amber-900/50 border border-amber-700 text-amber-300 rounded-xl p-3 text-sm',
+  },
+  gradient: {
+    root: 'min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600',
+    leftPanel:
+      'relative hidden lg:flex lg:flex-col lg:justify-center lg:items-center bg-gradient-to-br from-purple-600 via-pink-600 to-red-600 p-12 text-white overflow-hidden',
+    rightPanel:
+      'flex flex-col justify-center px-6 py-12 lg:px-8 bg-white/10 backdrop-blur-lg',
+    card: 'mx-auto w-full max-w-md space-y-8 bg-white/20 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30 p-8',
+    title: 'text-4xl lg:text-5xl font-bold text-white mb-6',
+    subtitle: 'text-lg text-white/90 mb-8 max-w-md',
+    feature: 'flex items-center space-x-3 text-white/80 mb-4',
+    heading: 'text-3xl font-bold text-white text-center mb-2',
+    subheading: 'text-white/80 text-center mb-8',
+    label: 'block text-sm font-medium text-white mb-2',
+    input:
+      'w-full px-4 py-3 border border-white/30 rounded-xl focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-200 bg-white/20 text-white placeholder-white/60',
+    button:
+      'w-full bg-white/20 backdrop-blur-sm text-white py-3 px-4 rounded-xl font-medium hover:bg-white/30 transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-white/50 border border-white/30',
+    themeToggle:
+      'fixed top-6 right-6 p-3 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition-all duration-200 z-50',
+    error:
+      'bg-red-500/20 border border-red-400/30 text-red-100 rounded-xl p-3 text-sm backdrop-blur-sm',
+    warning:
+      'bg-amber-500/20 border border-amber-400/30 text-amber-100 rounded-xl p-3 text-sm backdrop-blur-sm',
+  },
 }
 
 export default function Register() {
@@ -26,8 +95,29 @@ export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Theme state - stored in localStorage for persistence
+  const [currentTheme, setCurrentTheme] = useState(() => {
+    return localStorage.getItem('login-theme') || 'light'
+  })
+
+  const styles = themes[currentTheme]
+
+  // Save theme preference
+  useEffect(() => {
+    localStorage.setItem('login-theme', currentTheme)
+  }, [currentTheme])
+
+  const cycleTheme = () => {
+    const themeOrder = ['light', 'dark', 'gradient']
+    const currentIndex = themeOrder.indexOf(currentTheme)
+    const nextIndex = (currentIndex + 1) % themeOrder.length
+    setCurrentTheme(themeOrder[nextIndex])
+  }
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -58,82 +148,278 @@ export default function Register() {
 
   return (
     <div className={styles.root}>
+      {/* Theme Toggle Button */}
+      <button
+        onClick={cycleTheme}
+        className={styles.themeToggle}
+        title="Switch theme"
+      >
+        {currentTheme === 'light' ? (
+          <Moon size={20} />
+        ) : currentTheme === 'dark' ? (
+          <Sparkles size={20} />
+        ) : (
+          <Sun size={20} />
+        )}
+      </button>
+
+      {/* Firebase Configuration Warning */}
       {!isFirebaseConfigured && (
-        <div className="absolute top-2 left-1/2 z-20 w-[90%] max-w-xl -translate-x-1/2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-          Firebase is not configured. Copy .env.example to .env and set your
-          VITE_FIREBASE_* keys, then restart the dev server.
+        <div className="fixed top-20 left-1/2 z-40 w-[90%] max-w-xl -translate-x-1/2 transform">
+          <div className={styles.warning}>
+            <div className="flex items-center space-x-2">
+              <Shield size={16} />
+              <span>
+                Firebase is not configured. Copy .env.example to .env and set
+                your VITE_FIREBASE_* keys, then restart the dev server.
+              </span>
+            </div>
+          </div>
         </div>
       )}
-      <div className={styles.panel}>
-        <div className={styles.overlay}>
-          <h1 className={styles.title}>Create your account</h1>
-          <p className="mt-2 opacity-90">
-            Access quizzes, coding questions, and reports.
+
+      {/* Left Panel - Feature Preview */}
+      <div className={styles.leftPanel}>
+        {/* Decorative background elements */}
+        <div className="absolute top-10 left-10 h-20 w-20 rounded-full bg-white/10 blur-xl"></div>
+        <div className="absolute right-10 bottom-20 h-32 w-32 rounded-full bg-white/5 blur-2xl"></div>
+        <div className="absolute top-1/2 left-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-full bg-gradient-to-r from-white/5 to-transparent blur-3xl"></div>
+
+        <div className="relative z-10 text-center">
+          <div className="mb-6 flex items-center justify-center">
+            <div className="rounded-2xl bg-white/20 p-3 backdrop-blur-sm">
+              <UserPlus size={40} className="text-white" />
+            </div>
+          </div>
+
+          <h1 className={styles.title}>Join Placement Portal</h1>
+
+          <p className={styles.subtitle}>
+            Start your journey to coding excellence. Create your account and
+            unlock access to premium practice resources.
           </p>
+
+          <div className="space-y-4">
+            <div className={styles.feature}>
+              <div className="rounded-lg bg-white/20 p-2">
+                <svg
+                  className="h-5 w-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <span>Free access to all features</span>
+            </div>
+
+            <div className={styles.feature}>
+              <div className="rounded-lg bg-white/20 p-2">
+                <svg
+                  className="h-5 w-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <span>Real-time code execution</span>
+            </div>
+
+            <div className={styles.feature}>
+              <div className="rounded-lg bg-white/20 p-2">
+                <svg
+                  className="h-5 w-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                  <path
+                    fillRule="evenodd"
+                    d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <span>Track your progress</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div className={styles.formWrap}>
-        <form className={styles.form} onSubmit={onSubmit}>
-          <h2 className={styles.heading}>Register</h2>
+
+      {/* Right Panel - Registration Form */}
+      <div className={styles.rightPanel}>
+        <div className={styles.card}>
+          <div>
+            <h2 className={styles.heading}>Create account</h2>
+            <p className={styles.subheading}>
+              Get started with your placement preparation
+            </p>
+          </div>
+
           {error && (
-            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
+            <div className={styles.error}>
+              <div className="flex items-center space-x-2">
+                <svg
+                  className="h-4 w-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span>{error}</span>
+              </div>
             </div>
           )}
-          <div>
-            <label className={styles.label}>Name</label>
-            <input
-              className={styles.input}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              placeholder="Your name"
-            />
-          </div>
-          <div>
-            <label className={styles.label}>Email</label>
-            <input
-              type="email"
-              className={styles.input}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="you@example.com"
-            />
-          </div>
-          <div>
-            <label className={styles.label}>Password</label>
-            <input
-              type="password"
-              className={styles.input}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              placeholder="Minimum 6 characters"
-            />
-          </div>
-          <div>
-            <label className={styles.label}>Confirm Password</label>
-            <input
-              type="password"
-              className={styles.input}
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              required
-              minLength={6}
-              placeholder="Re-enter password"
-            />
-          </div>
-          <button type="submit" className={styles.submit} disabled={loading}>
-            {loading ? 'Creating…' : 'Create account'}
-          </button>
-          <div className="text-center">
-            <Link to="/login" className={styles.link}>
-              Already have an account? Login
+
+          <form className="space-y-6" onSubmit={onSubmit}>
+            <div>
+              <label htmlFor="name" className={styles.label}>
+                Full Name
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={styles.input}
+                placeholder="Enter your full name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className={styles.label}>
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={styles.input}
+                placeholder="Enter your email"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className={styles.label}>
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={styles.input}
+                  placeholder="Minimum 6 characters"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="confirm" className={styles.label}>
+                Confirm Password
+              </label>
+              <div className="relative">
+                <input
+                  id="confirm"
+                  name="confirm"
+                  type={showConfirm ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  required
+                  minLength={6}
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  className={styles.input}
+                  placeholder="Re-enter your password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                >
+                  {showConfirm ? (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className={styles.button}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  {loading ? (
+                    <svg
+                      className="h-4 w-4 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  ) : (
+                    <ArrowRight size={16} />
+                  )}
+                  <span>
+                    {loading ? 'Creating account...' : 'Create account'}
+                  </span>
+                </div>
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-6 text-center">
+            <Link
+              to="/login"
+              className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              Already have an account? Sign in
             </Link>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   )
