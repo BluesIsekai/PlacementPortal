@@ -7,6 +7,8 @@ import Profile from './pages/Profile.jsx'
 import Notifications from './pages/Notifications.jsx' // Import Notifications page
 import Quizzes from './pages/Quizzes.jsx'; // Import Quizzes page
 import ProgressReport from "./pages/ProgressReport"; // Import ProgressReport page
+import Companies from './pages/Companies.jsx'; // Import Companies page
+import Coding from './pages/Coding.jsx'; // Import Coding page
 import { stats, quizzes } from "./data/quizData"; // Import stats and quizzes from external file
 
 export default function App() {
@@ -21,6 +23,8 @@ export default function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/notifications" element={<Notifications />} /> // Added route for Notifications page
         <Route path="/quizzes" element={<Quizzes />} /> // Added route for Quizzes page
+        <Route path="/companies" element={<Companies />} /> // Added route for Companies page
+        <Route path="/coding" element={<Coding />} /> // Added route for Coding page
         <Route
           path="/progress-report"
           element={<ProgressReport stats={stats} quizzes={quizzes} />} // Pass stats and quizzes as props

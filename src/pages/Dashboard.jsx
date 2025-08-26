@@ -14,7 +14,7 @@ const PlacementPortalDashboard = () => {
     { icon: <LayoutDashboard size={18} />, label: "Dashboard", path: "/dashboard" },
     { icon: <Code2 size={18} />, label: "Coding", path: "/coding" },
     { icon: <Building2 size={18} />, label: "Companies", path: "/companies" },
-    { icon: <FileText size={18} />, label: "Quizzes", path: "/quizzes" }, // Updated Quizzes path
+    { icon: <FileText size={18} />, label: "Quizzes", path: "/quizzes" },
     { icon: <BarChart3 size={18} />, label: "Reports", path: "/reports" },
     { icon: <Calendar size={18} />, label: "Schedule", path: "/schedule" },
     { icon: <Mail size={18} />, label: "Applications", path: "/applications" },
