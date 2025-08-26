@@ -9,14 +9,17 @@ import Quizzes from './pages/Quizzes.jsx'; // Import Quizzes page
 import ProgressReport from "./pages/ProgressReport"; // Import ProgressReport page
 import Companies from './pages/Companies.jsx'; // Import Companies page
 import Coding from './pages/Coding.jsx'; // Import Coding page
+import Landing from './pages/Landing.jsx'
+import Features from './pages/Features.jsx'
 import { stats, quizzes } from "./data/quizData"; // Import stats and quizzes from external file
 
 export default function App() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+  <Route path="/" element={<Landing />} />
+  <Route path="/dashboard" element={<Dashboard />} />
+  <Route path="/features" element={<Features />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/settings" element={<Settings />} />
