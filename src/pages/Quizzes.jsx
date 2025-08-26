@@ -3,7 +3,8 @@ import {
   Search, Filter, Clock, BarChart3, Award, 
   Play, CheckCircle, XCircle, AlertCircle,
   ChevronDown, ChevronUp, Star, TrendingUp,
-  BookOpen, Timer, HelpCircle, Target
+  BookOpen, Timer, HelpCircle, Target,
+  ArrowLeft
 } from "lucide-react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 
@@ -431,7 +432,15 @@ const Quizzes = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Practice Quizzes</h1>
+            <div className="flex items-center gap-4 mb-6">
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="p-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <h1 className="text-3xl font-bold">Practice Quizzes</h1>
+            </div>
             <p className="text-slate-600 dark:text-slate-400 mt-2">
               Prepare for your placements with curated quizzes
             </p>

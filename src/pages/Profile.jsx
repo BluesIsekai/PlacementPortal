@@ -3,10 +3,13 @@ import {
   User, Mail, Phone, MapPin, GraduationCap, Calendar, 
   Edit3, Save, X, Briefcase, Code, Award, BookOpen,
   Linkedin, Github, ExternalLink, Download, Upload,
-  Star, ChevronDown, ChevronUp, Camera
+  Star, ChevronDown, ChevronUp, Camera, ArrowLeft
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
+  const navigate = useNavigate();
+  
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [showAllSkills, setShowAllSkills] = useState(false);
@@ -115,15 +118,21 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Profile</h1>
-            <p className="text-slate-600 dark:text-slate-400 mt-2">
-              Manage your profile and showcase your skills to recruiters
-            </p>
-          </div>
+        {/* Back Button */}
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => navigate("/")}
+            className="p-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-3xl font-bold">Profile</h1>
         </div>
+
+        {/* Header */}
+        <p className="text-slate-600 dark:text-slate-400 mt-2">
+          Manage your profile and showcase your skills to recruiters
+        </p>
 
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar - Profile Card */}

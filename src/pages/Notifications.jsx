@@ -3,10 +3,12 @@ import {
   Bell, CheckCircle, Clock, AlertCircle, 
   Calendar, Mail, FileText, Users, 
   ChevronDown, ChevronUp, Filter, Check,
-  X, Trash2
+  X, Trash2, ArrowLeft
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Notifications = () => {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("all");
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, notificationId: null });
 
@@ -143,15 +145,21 @@ const Notifications = () => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100" onClick={handleCloseContextMenu}>
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Notifications</h1>
-            <p className="text-slate-600 dark:text-slate-400 mt-2">
-              Stay updated with your placement preparation activities
-            </p>
-          </div>
+        {/* Back Button */}
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => navigate("/")}
+            className="p-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-3xl font-bold">Notifications</h1>
         </div>
+
+        {/* Header */}
+        <p className="text-slate-600 dark:text-slate-400 mt-2">
+          Stay updated with your placement preparation activities
+        </p>
 
         {/* Filters */}
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 mb-6">

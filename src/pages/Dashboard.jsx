@@ -33,6 +33,14 @@ const PlacementPortalDashboard = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (dark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [dark]); // Sync dark mode with the document class
+
   return (
     <div className={dark ? "dark" : ""}>
       <div className="min-h-screen bg-slate-950 text-slate-100 antialiased flex flex-col">
