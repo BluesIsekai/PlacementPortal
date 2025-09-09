@@ -6,9 +6,11 @@ import {
   Star, ChevronDown, ChevronUp, Camera, ArrowLeft
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
   
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -116,17 +118,17 @@ const Profile = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+    <div className={`min-h-screen ${theme.bg.primary} ${theme.text.primary} transition-colors duration-300 ease-in-out`}>
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Back Button */}
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => navigate("/")}
-            className="p-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
+            onClick={() => navigate("/dashboard")}
+            className={`p-2 rounded-lg ${theme.button.secondary} ${theme.border.primary} transition-colors border`}
           >
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-3xl font-bold">Profile</h1>
+          <h1 className={`text-3xl font-bold ${theme.text.primary}`}>Profile</h1>
         </div>
 
         {/* Header */}

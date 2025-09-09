@@ -7,9 +7,11 @@ import {
   Zap, Coffee, Clock, Terminal, ArrowLeft
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 
 const CodingPage = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
   const [activeTab, setActiveTab] = useState("problems");
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
   const [selectedTopic, setSelectedTopic] = useState("all");
@@ -234,19 +236,19 @@ const CodingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+    <div className={`min-h-screen ${theme.bg.primary} ${theme.text.primary}`}>
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Back Button and Heading */}
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => navigate("/dashboard")}
-            className="p-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
+            className={`p-2 rounded-lg ${theme.bg.secondary} ${theme.bg.hover} transition-colors`}
           >
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-3xl font-bold">Coding Practice</h1>
-            <p className="text-slate-600 dark:text-slate-400 mt-2">
+            <h1 className={`text-3xl font-bold ${theme.text.primary}`}>Coding Practice</h1>
+            <p className={`${theme.text.secondary} mt-2`}>
               Sharpen your coding skills with curated problems
             </p>
           </div>
@@ -254,38 +256,38 @@ const CodingPage = () => {
 
         {/* Stats Overview */}
         <div className="flex flex-wrap gap-4 mb-8">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4">
+          <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-4`}>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-                <Code2 size={20} className="text-indigo-600 dark:text-indigo-400" />
+              <div className={`p-2 ${theme.bg.accent} rounded-lg`}>
+                <Code2 size={20} className="text-indigo-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{userStats.problemsSolved}</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Solved</p>
+                <p className={`text-2xl font-bold ${theme.text.primary}`}>{userStats.problemsSolved}</p>
+                <p className={`text-sm ${theme.text.tertiary}`}>Solved</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4">
+          <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-4`}>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <CheckCircle size={20} className="text-green-600 dark:text-green-400" />
+              <div className={`p-2 ${theme.bg.accent} rounded-lg`}>
+                <CheckCircle size={20} className="text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{userStats.acceptanceRate}</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Acceptance</p>
+                <p className={`text-2xl font-bold ${theme.text.primary}`}>{userStats.acceptanceRate}</p>
+                <p className={`text-sm ${theme.text.tertiary}`}>Acceptance</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4">
+          <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-4`}>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                <Award size={20} className="text-amber-600 dark:text-amber-400" />
+              <div className={`p-2 ${theme.bg.accent} rounded-lg`}>
+                <Award size={20} className="text-amber-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{userStats.rank}</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Rank</p>
+                <p className={`text-2xl font-bold ${theme.text.primary}`}>{userStats.rank}</p>
+                <p className={`text-sm ${theme.text.tertiary}`}>Rank</p>
               </div>
             </div>
           </div>
@@ -294,7 +296,7 @@ const CodingPage = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left Sidebar - Problem List */}
           <div className="lg:w-1/3">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 mb-6">
+            <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-4 mb-6`}>
               <div className="flex items-center gap-2 mb-4">
                 <Search size={18} className="text-slate-500" />
                 <input
