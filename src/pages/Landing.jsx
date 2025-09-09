@@ -14,8 +14,13 @@ const LandingPage = () => {
   const [animateFeatures, setAnimateFeatures] = useState(false);
   const [animateStats, setAnimateStats] = useState(false);
   const [animateTestimonials, setAnimateTestimonials] = useState(false);
+  const [animateHowItWorks, setAnimateHowItWorks] = useState(false);
+  const [animateCompanies, setAnimateCompanies] = useState(false);
+  const [animateFAQ, setAnimateFAQ] = useState(false);
+  const [animateNewsletter, setAnimateNewsletter] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
+  const [hoveredCard, setHoveredCard] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,15 +28,36 @@ const LandingPage = () => {
     const timer1 = setTimeout(() => setAnimateFeatures(true), 500);
     const timer2 = setTimeout(() => setAnimateStats(true), 1000);
     const timer3 = setTimeout(() => setAnimateTestimonials(true), 1500);
+    const timer4 = setTimeout(() => setAnimateHowItWorks(true), 2000);
+    const timer5 = setTimeout(() => setAnimateCompanies(true), 2500);
+    const timer6 = setTimeout(() => setAnimateFAQ(true), 3000);
+    const timer7 = setTimeout(() => setAnimateNewsletter(true), 3500);
     
     // Auto rotate features
     const featureInterval = setInterval(() => {
       setActiveFeature(prev => (prev + 1) % features.length);
     }, 4000);
     
-    // Scroll event listener
+    // Scroll event listener with more animation triggers
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300);
+      
+      // Trigger animations based on scroll position
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      
+      if (scrollY > windowHeight * 0.3 && !animateHowItWorks) {
+        setAnimateHowItWorks(true);
+      }
+      if (scrollY > windowHeight * 0.6 && !animateCompanies) {
+        setAnimateCompanies(true);
+      }
+      if (scrollY > windowHeight * 1.0 && !animateFAQ) {
+        setAnimateFAQ(true);
+      }
+      if (scrollY > windowHeight * 1.3 && !animateNewsletter) {
+        setAnimateNewsletter(true);
+      }
     };
     
     window.addEventListener('scroll', handleScroll);
@@ -40,10 +66,14 @@ const LandingPage = () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
+      clearTimeout(timer4);
+      clearTimeout(timer5);
+      clearTimeout(timer6);
+      clearTimeout(timer7);
       clearInterval(featureInterval);
       window.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  }, [animateHowItWorks, animateCompanies, animateFAQ, animateNewsletter]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -125,19 +155,49 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white overflow-hidden">
-      {/* Animated background elements */}
+      {/* Enhanced Animated background elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
+        {[...Array(25)].map((_, i) => (
           <div 
             key={i}
-            className="absolute rounded-full bg-gradient-to-br from-indigo-500/10 to-violet-500/10"
+            className="absolute rounded-full bg-gradient-to-br from-indigo-500/10 to-violet-500/10 animate-pulse"
             style={{
-              width: Math.random() * 120 + 30,
-              height: Math.random() * 120 + 30,
+              width: Math.random() * 140 + 40,
+              height: Math.random() * 140 + 40,
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
-              animation: `float ${Math.random() * 15 + 10}s infinite ease-in-out`,
-              animationDelay: `${Math.random() * 7}s`
+              animation: `float ${Math.random() * 20 + 15}s infinite ease-in-out, pulse ${Math.random() * 3 + 2}s infinite alternate`,
+              animationDelay: `${Math.random() * 10}s`
+            }}
+          />
+        ))}
+        
+        {/* Floating code symbols */}
+        {['{ }', '</>', '( )', '[ ]', '&&', '||', '++', '--'].map((symbol, i) => (
+          <div
+            key={`symbol-${i}`}
+            className="absolute text-indigo-500/20 font-mono text-2xl animate-bounce"
+            style={{
+              top: `${Math.random() * 80 + 10}%`,
+              left: `${Math.random() * 80 + 10}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${Math.random() * 4 + 3}s`
+            }}
+          >
+            {symbol}
+          </div>
+        ))}
+        
+        {/* Interactive particles */}
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={`particle-${i}`}
+            className="absolute w-2 h-2 bg-gradient-to-r from-indigo-400 to-violet-400 rounded-full animate-ping"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 8}s`,
+              animationDuration: `${Math.random() * 3 + 2}s`
             }}
           />
         ))}
@@ -160,8 +220,13 @@ const LandingPage = () => {
       <header className="relative z-10 py-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 grid place-content-center font-bold animate-pulse">
-              PP
+            <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-violet-600 grid place-content-center font-bold">
+              <div className="relative flex flex-col items-center justify-center">
+                <GraduationCap className="text-yellow-300" size={20} />
+                <div className="text-white font-black text-lg tracking-wide" style={{ textShadow: '0 0 8px rgba(255,255,255,0.5)', fontFamily: 'monospace', lineHeight: '0.4', marginTop: '-4px' }}>
+                  P<span className="text-yellow-300">P</span>
+                </div>
+              </div>
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
               Placement Portal
@@ -377,6 +442,190 @@ const LandingPage = () => {
             </div>
           </div>
         </section>
+
+        {/* How It Works Section */}
+        <section className="relative py-16 lg:py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl lg:text-4xl font-bold mb-4">How It <span className="text-indigo-400">Works</span></h2>
+              <p className="text-xl text-slate-400 max-w-3xl mx-auto">Simple steps to ace your placement preparation and land your dream job</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className={`text-center group ${animateHowItWorks ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} transition-all duration-700`} style={{ transitionDelay: '0ms' }}>
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-full flex items-center justify-center mx-auto group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 shadow-lg group-hover:shadow-indigo-500/50">
+                    <span className="text-2xl font-bold text-white group-hover:animate-pulse">1</span>
+                  </div>
+                  <div className="absolute top-10 left-1/2 w-full h-0.5 bg-gradient-to-r from-indigo-500 to-violet-600 hidden lg:block transform -translate-x-1/2 animate-pulse"></div>
+                </div>
+                <h3 className="text-xl font-semibold mb-3 group-hover:text-indigo-400 transition-colors duration-300">Sign Up</h3>
+                <p className="text-slate-400 group-hover:text-slate-300 transition-colors duration-300">Create your account and set up your personalized learning profile</p>
+              </div>
+              
+              <div className={`text-center group ${animateHowItWorks ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} transition-all duration-700`} style={{ transitionDelay: '200ms' }}>
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center mx-auto group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 shadow-lg group-hover:shadow-green-500/50">
+                    <span className="text-2xl font-bold text-white group-hover:animate-pulse">2</span>
+                  </div>
+                  <div className="absolute top-10 left-1/2 w-full h-0.5 bg-gradient-to-r from-green-500 to-teal-600 hidden lg:block transform -translate-x-1/2 animate-pulse"></div>
+                </div>
+                <h3 className="text-xl font-semibold mb-3 group-hover:text-green-400 transition-colors duration-300">Practice</h3>
+                <p className="text-slate-400 group-hover:text-slate-300 transition-colors duration-300">Start solving coding problems, take quizzes, and practice mock interviews</p>
+              </div>
+              
+              <div className={`text-center group ${animateHowItWorks ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} transition-all duration-700`} style={{ transitionDelay: '400ms' }}>
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 shadow-lg group-hover:shadow-purple-500/50">
+                    <span className="text-2xl font-bold text-white group-hover:animate-pulse">3</span>
+                  </div>
+                  <div className="absolute top-10 left-1/2 w-full h-0.5 bg-gradient-to-r from-purple-500 to-pink-600 hidden lg:block transform -translate-x-1/2 animate-pulse"></div>
+                </div>
+                <h3 className="text-xl font-semibold mb-3 group-hover:text-purple-400 transition-colors duration-300">Track Progress</h3>
+                <p className="text-slate-400 group-hover:text-slate-300 transition-colors duration-300">Monitor your improvement with detailed analytics and personalized feedback</p>
+              </div>
+              
+              <div className={`text-center group ${animateHowItWorks ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} transition-all duration-700`} style={{ transitionDelay: '600ms' }}>
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center mx-auto group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 shadow-lg group-hover:shadow-amber-500/50">
+                    <span className="text-2xl font-bold text-white group-hover:animate-pulse">4</span>
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold mb-3 group-hover:text-amber-400 transition-colors duration-300">Get Placed</h3>
+                <p className="text-slate-400 group-hover:text-slate-300 transition-colors duration-300">Apply confidently to your dream companies and ace the interviews</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Companies Section */}
+        <section className="relative py-16 lg:py-24 bg-slate-800/30">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl lg:text-4xl font-bold mb-4">Trusted by Students from <span className="text-indigo-400">Top Universities</span></h2>
+              <p className="text-xl text-slate-400 max-w-3xl mx-auto">Students from prestigious institutions trust our platform for their placement preparation</p>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6 items-center">
+              {["IIT Delhi", "IIT Mumbai", "NIT Trichy", "BITS Pilani", "VIT Chennai", "IIIT Hyderabad", "IIIT Allahabad"].map((college, index) => (
+                <div 
+                  key={index} 
+                  className={`bg-slate-800/40 backdrop-blur-sm rounded-xl p-4 text-center hover:bg-slate-800/60 transition-all duration-500 hover:scale-110 hover:rotate-2 transform border border-slate-700/30 hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-500/25 ${animateCompanies ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                  style={{ transitionDelay: `${index * 100}ms` }}
+                  onMouseEnter={() => setHoveredCard(`college-${index}`)}
+                  onMouseLeave={() => setHoveredCard(null)}
+                >
+                  <div className={`w-12 h-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg flex items-center justify-center mx-auto mb-3 transition-all duration-300 ${hoveredCard === `college-${index}` ? 'animate-bounce' : ''}`}>
+                    <GraduationCap size={24} className="text-white" />
+                  </div>
+                  <h3 className="font-semibold text-sm">{college}</h3>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-16">
+              <h3 className={`text-2xl font-bold text-center mb-8 ${animateCompanies ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} transition-all duration-700`}>Our Alumni Work At</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6 items-center">
+                {["Google", "Microsoft", "Amazon", "Meta", "Apple", "Netflix", "Tesla", "SpaceX"].map((company, index) => (
+                  <div 
+                    key={index} 
+                    className={`bg-slate-800/40 backdrop-blur-sm rounded-lg p-4 text-center hover:bg-slate-800/60 transition-all duration-500 hover:scale-110 hover:-rotate-2 transform border border-slate-700/30 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/25 cursor-pointer ${animateCompanies ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                    style={{ transitionDelay: `${(index + 6) * 50}ms` }}
+                    onMouseEnter={() => setHoveredCard(`company-${index}`)}
+                    onMouseLeave={() => setHoveredCard(null)}
+                  >
+                    <div className={`w-8 h-8 bg-gradient-to-br from-green-500 to-teal-600 rounded-md flex items-center justify-center mx-auto mb-2 transition-all duration-300 ${hoveredCard === `company-${index}` ? 'animate-spin' : ''}`}>
+                      <Building2 size={16} className="text-white" />
+                    </div>
+                    <span className="text-xs font-medium">{company}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="relative py-16 lg:py-24">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl lg:text-4xl font-bold mb-4">Frequently Asked <span className="text-indigo-400">Questions</span></h2>
+              <p className="text-xl text-slate-400">Everything you need to know about our placement preparation platform</p>
+            </div>
+            
+            <div className="space-y-6">
+              {[
+                {
+                  question: "Is the platform suitable for beginners?",
+                  answer: "Absolutely! Our platform caters to all skill levels. We have beginner-friendly coding problems, basic aptitude questions, and step-by-step learning paths to help you start from scratch."
+                },
+                {
+                  question: "How often is the content updated?",
+                  answer: "We update our content regularly with new coding problems, company-specific questions, and interview experiences. Our team adds fresh content weekly to keep pace with industry trends."
+                },
+                {
+                  question: "Can I track my progress over time?",
+                  answer: "Yes! Our advanced analytics dashboard shows your progress across different categories, strengths and weaknesses, performance trends, and personalized recommendations for improvement."
+                },
+                {
+                  question: "Do you provide company-specific preparation?",
+                  answer: "We offer detailed preparation materials for 200+ companies including coding patterns, previous interview questions, company culture insights, and specific tips from successful candidates."
+                },
+                {
+                  question: "What makes your mock interviews special?",
+                  answer: "Our mock interviews are conducted by industry professionals and senior engineers from top tech companies. You'll receive detailed feedback on both technical and soft skills."
+                },
+                {
+                  question: "Is there a mobile app available?",
+                  answer: "Currently, we offer a responsive web platform that works seamlessly on all devices. A dedicated mobile app is in development and will be available soon."
+                }
+              ].map((faq, index) => (
+                <div 
+                  key={index} 
+                  className={`bg-slate-800/40 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30 hover:border-indigo-500/30 transition-all duration-500 hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/10 cursor-pointer ${animateFAQ ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}
+                  style={{ transitionDelay: `${index * 100}ms` }}
+                  onMouseEnter={() => setHoveredCard(`faq-${index}`)}
+                  onMouseLeave={() => setHoveredCard(null)}
+                >
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-3 hover:text-indigo-400 transition-colors duration-300">
+                    <div className={`w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center transition-all duration-300 ${hoveredCard === `faq-${index}` ? 'animate-pulse bg-indigo-500 scale-110' : ''}`}>
+                      <span className="text-xs font-bold text-white">Q</span>
+                    </div>
+                    {faq.question}
+                  </h3>
+                  <p className="text-slate-400 leading-relaxed ml-9 hover:text-slate-300 transition-colors duration-300">{faq.answer}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Newsletter Section */}
+        <section className="relative py-16 lg:py-24 bg-slate-800/50">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className={`bg-slate-800/60 backdrop-blur-md rounded-2xl p-8 border border-slate-700/50 hover:border-indigo-500/30 transition-all duration-500 hover:shadow-xl hover:shadow-indigo-500/10 ${animateNewsletter ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+              <Mail size={48} className={`text-indigo-400 mx-auto mb-6 transition-all duration-300 ${animateNewsletter ? 'animate-bounce' : ''}`} />
+              <h2 className="text-3xl font-bold mb-4">Stay Updated with <span className="text-indigo-400">Latest Tips</span></h2>
+              <p className="text-xl text-slate-400 mb-8">Get weekly placement tips, coding challenges, and success stories delivered to your inbox</p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                <input
+                  type="email"
+                  placeholder="Enter your email address"
+                  className="flex-1 px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-white placeholder-slate-400 transition-all duration-300 hover:border-indigo-500/50"
+                />
+                <button className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold transition-all duration-300 hover:scale-110 hover:rotate-1 transform flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-indigo-500/50">
+                  Subscribe
+                  <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
+                </button>
+              </div>
+              
+              <p className="text-sm text-slate-500 mt-4 hover:text-slate-400 transition-colors duration-300">
+                No spam, unsubscribe at any time. Join 10,000+ students already subscribed.
+              </p>
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* Footer */}
@@ -386,8 +635,13 @@ const LandingPage = () => {
             {/* Brand Column */}
             <div className="lg:col-span-1">
               <div className="flex items-center gap-3 mb-6">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 grid place-content-center font-bold">
-                  PP
+                <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-violet-600 grid place-content-center font-bold">
+                  <div className="relative flex flex-col items-center justify-center">
+                    <GraduationCap className="text-yellow-300" size={20} />
+                    <div className="text-white font-black text-lg tracking-wide" style={{ textShadow: '0 0 8px rgba(255,255,255,0.5)', fontFamily: 'monospace', lineHeight: '0.4', marginTop: '-4px' }}>
+                      P<span className="text-yellow-300">P</span>
+                    </div>
+                  </div>
                 </div>
                 <span className="text-xl font-bold">Placement Portal</span>
               </div>
@@ -474,33 +728,126 @@ const LandingPage = () => {
         </div>
       </footer>
 
-      {/* Scroll to Top Button */}
+      {/* Enhanced Scroll to Top Button */}
       {showScrollTop && (
         <button 
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 h-12 w-12 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-lg transition-all duration-300 z-50 hover:scale-110 transform"
+          className="fixed bottom-6 right-6 h-12 w-12 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-lg transition-all duration-300 z-50 hover:scale-110 transform animate-bounce hover:animate-none hover:shadow-indigo-500/50"
           aria-label="Scroll to top"
         >
-          <ArrowUp size={24} />
+          <ArrowUp size={24} className="transition-transform duration-300 hover:scale-110" />
         </button>
       )}
 
-      {/* Global Styles for Animations */}
+      {/* Enhanced Global Styles for Animations */}
       <style jsx>{`
         @keyframes float {
           0% {
             transform: translateY(0) rotate(0deg);
           }
           50% {
-            transform: translateY(-20px) rotate(10deg);
+            transform: translateY(-30px) rotate(15deg);
           }
           100% {
             transform: translateY(0) rotate(0deg);
           }
         }
         
+        @keyframes fadeInUp {
+          0% {
+            opacity: 0;
+            transform: translateY(50px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes fadeInLeft {
+          0% {
+            opacity: 0;
+            transform: translateX(-50px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        @keyframes fadeInRight {
+          0% {
+            opacity: 0;
+            transform: translateX(50px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        @keyframes scaleIn {
+          0% {
+            opacity: 0;
+            transform: scale(0.5);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        @keyframes slideInDown {
+          0% {
+            opacity: 0;
+            transform: translateY(-100px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes glow {
+          0%, 100% {
+            box-shadow: 0 0 5px rgba(99, 102, 241, 0.2), 0 0 10px rgba(99, 102, 241, 0.2), 0 0 15px rgba(99, 102, 241, 0.2);
+          }
+          50% {
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.4), 0 0 20px rgba(99, 102, 241, 0.4), 0 0 30px rgba(99, 102, 241, 0.4);
+          }
+        }
+        
+        .animate-fadeInUp {
+          animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .animate-fadeInLeft {
+          animation: fadeInLeft 0.6s ease-out;
+        }
+        
+        .animate-fadeInRight {
+          animation: fadeInRight 0.6s ease-out;
+        }
+        
+        .animate-scaleIn {
+          animation: scaleIn 0.5s ease-out;
+        }
+        
+        .animate-slideInDown {
+          animation: slideInDown 0.8s ease-out;
+        }
+        
+        .animate-glow {
+          animation: glow 2s ease-in-out infinite;
+        }
+        
         .bg-grid-white\/\[0\.05\] {
           background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(255 255 255 / 0.05)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
+        }
+        
+        /* Parallax scroll effect */
+        .parallax-element {
+          transition: transform 0.1s ease-out;
         }
       `}</style>
     </div>

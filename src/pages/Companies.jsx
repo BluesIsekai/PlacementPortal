@@ -7,9 +7,11 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 
 const Companies = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedCompany, setExpandedCompany] = useState(null);

@@ -148,7 +148,7 @@ const Notifications = () => {
         {/* Back Button */}
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/dashboard")}
             className="p-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
           >
             <ArrowLeft size={20} />
