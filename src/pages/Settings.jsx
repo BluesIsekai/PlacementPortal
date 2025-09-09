@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { 
   User, Lock, Bell, Shield, Palette, Download, 
-  Trash2, Save, Eye, EyeOff, X, Check 
+  Trash2, Save, Eye, EyeOff, X, Check, ArrowLeft
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Settings = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("security");
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -57,12 +59,21 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="mb-8">
+        {/* Back Button */}
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => navigate("/")}
+            className="p-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </button>
           <h1 className="text-3xl font-bold">Settings</h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">
-            Manage your account settings and preferences
-          </p>
         </div>
+
+        {/* Header */}
+        <p className="text-slate-600 dark:text-slate-400 mt-2">
+          Manage your account settings and preferences
+        </p>
 
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar Navigation */}

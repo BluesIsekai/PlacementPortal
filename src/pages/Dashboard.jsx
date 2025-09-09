@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, Mail, X, Menu, ChevronDown } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Footer from "./Footer"; // Imported the Footer component
 
 const PlacementPortalDashboard = () => {
@@ -8,15 +8,16 @@ const PlacementPortalDashboard = () => {
   const [openUser, setOpenUser] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const profileRef = useRef(null);
+  const navigate = useNavigate(); // Initialize navigate function
 
   const navItems = [
-    { icon: <LayoutDashboard size={18} />, label: "Dashboard" },
-    { icon: <Code2 size={18} />, label: "Coding" },
-    { icon: <Building2 size={18} />, label: "Companies" },
-    { icon: <FileText size={18} />, label: "Quizzes" },
-    { icon: <BarChart3 size={18} />, label: "Reports" },
-    { icon: <Calendar size={18} />, label: "Schedule" },
-    { icon: <Mail size={18} />, label: "Applications" },
+    { icon: <LayoutDashboard size={18} />, label: "Dashboard", path: "/dashboard" },
+    { icon: <Code2 size={18} />, label: "Coding", path: "/coding" },
+    { icon: <Building2 size={18} />, label: "Companies", path: "/companies" },
+    { icon: <FileText size={18} />, label: "Quizzes", path: "/quizzes" },
+    { icon: <BarChart3 size={18} />, label: "Reports", path: "/reports" },
+    { icon: <Calendar size={18} />, label: "Schedule", path: "/schedule" },
+    { icon: <Mail size={18} />, label: "Applications", path: "/applications" },
   ];
 
   useEffect(() => {
@@ -31,6 +32,14 @@ const PlacementPortalDashboard = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (dark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [dark]); // Sync dark mode with the document class
 
   return (
     <div className={dark ? "dark" : ""}>
@@ -68,7 +77,11 @@ const PlacementPortalDashboard = () => {
                 <span className="hidden sm:inline">{dark ? "Light" : "Dark"}</span>
               </button>
 
-              <button className="relative rounded-lg border border-slate-800 bg-slate-900 p-2 hover:bg-slate-800" aria-label="Notifications">
+              <button
+                className="relative rounded-lg border border-slate-800 bg-slate-900 p-2 hover:bg-slate-800"
+                aria-label="Notifications"
+                onClick={() => navigate("/notifications")} // Navigate to Notifications page on click
+              >
                 <Bell size={18} />
                 <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-indigo-600 text-[10px] grid place-content-center">3</span>
               </button>
@@ -223,15 +236,15 @@ const DesktopSidebar = ({ navItems }) => {
   return (
     <>
       <nav className="space-y-1">
-        {navItems.map((item, i) => (
-          <a
-            key={i}
-            href="#"
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+        {navItems.map((item, index) => (
+          <Link
+            key={index}
+            to={item.path} // Added dynamic path navigation
+            className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-800"
           >
-            <span className="opacity-90">{item.icon}</span>
-            {item.label}
-          </a>
+            {item.icon}
+            <span>{item.label}</span>
+          </Link>
         ))}
         <Link
           to="/settings"
