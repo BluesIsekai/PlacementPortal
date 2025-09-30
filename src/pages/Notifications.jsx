@@ -3,7 +3,7 @@ import {
   Bell, CheckCircle, Clock, AlertCircle, 
   Calendar, Mail, FileText, Users, 
   ChevronDown, ChevronUp, Filter, Check,
-  X, Trash2, ArrowLeft
+  X, Trash2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -145,14 +145,8 @@ const Notifications = () => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100" onClick={handleCloseContextMenu}>
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Back Button */}
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="p-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
-          >
-            <ArrowLeft size={20} />
-          </button>
+        {/* Header */}
+        <div className="mb-6">
           <h1 className="text-3xl font-bold">Notifications</h1>
         </div>
 

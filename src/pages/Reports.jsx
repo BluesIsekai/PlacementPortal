@@ -5,8 +5,10 @@ import {
   BookOpen, Code2, Users, PieChart,
   ChevronDown, ChevronUp, Eye, EyeOff
 } from "lucide-react";
+import { useTheme } from "../context/ThemeContext";
 
 const ReportsPage = () => {
+  const theme = useTheme();
   const [timeRange, setTimeRange] = useState("month");
   const [activeTab, setActiveTab] = useState("overview");
   const [showDetailedView, setShowDetailedView] = useState(false);
@@ -89,13 +91,13 @@ const ReportsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-6">
+    <div className={`min-h-screen ${theme.bg.primary} ${theme.text.primary} p-6`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold">Performance Reports</h1>
-            <p className="text-slate-600 dark:text-slate-400 mt-2">
+            <p className={`${theme.text.muted} mt-2`}>
               Track your progress and analyze your preparation
             </p>
           </div>
@@ -107,7 +109,7 @@ const ReportsPage = () => {
               <Download size={18} />
               Export Report
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <button className={`flex items-center gap-2 px-4 py-2 ${theme.bg.card} ${theme.text.secondary} rounded-lg font-medium hover:${theme.bg.hover} transition-colors`}>
               <Filter size={18} />
               Filter
             </button>
@@ -115,9 +117,9 @@ const ReportsPage = () => {
         </div>
 
         {/* Time Range Filter */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 mb-6">
+        <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-4 mb-6`}>
           <div className="flex items-center gap-3 mb-3">
-            <Calendar size={18} className="text-slate-500" />
+            <Calendar size={18} className={`${theme.text.muted}`} />
             <span className="font-medium">Time Range:</span>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -128,7 +130,7 @@ const ReportsPage = () => {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   timeRange === range.id
                     ? "bg-indigo-600 text-white"
-                    : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
+                    : `${theme.bg.hover} ${theme.text.secondary} hover:${theme.bg.hover2}`
                 }`}
               >
                 {range.label}
@@ -138,7 +140,7 @@ const ReportsPage = () => {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 mb-6">
+        <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-4 mb-6`}>
           <div className="flex overflow-x-auto">
             {tabs.map(tab => (
               <button
@@ -147,7 +149,7 @@ const ReportsPage = () => {
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                   activeTab === tab.id
                     ? "bg-indigo-600 text-white"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
+                    : `${theme.text.muted} hover:${theme.bg.hover}`
                 }`}
               >
                 {tab.icon}
@@ -162,50 +164,50 @@ const ReportsPage = () => {
           <div className="space-y-6">
             {/* Stats Overview */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-5">
+              <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-5`}>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                    <Code2 size={20} className="text-blue-600 dark:text-blue-400" />
+                  <div className={`p-2 ${theme.isDark ? 'bg-blue-900/30' : 'bg-blue-100'} rounded-lg`}>
+                    <Code2 size={20} className={`${theme.isDark ? 'text-blue-400' : 'text-blue-600'}`} />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{reportData.overview.totalSolved}</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Problems Solved</p>
+                    <p className={`text-sm ${theme.text.muted}`}>Problems Solved</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-5">
+              <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-5`}>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                    <Target size={20} className="text-green-600 dark:text-green-400" />
+                  <div className={`p-2 ${theme.isDark ? 'bg-green-900/30' : 'bg-green-100'} rounded-lg`}>
+                    <Target size={20} className={`${theme.isDark ? 'text-green-400' : 'text-green-600'}`} />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{reportData.overview.accuracy}%</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Accuracy</p>
+                    <p className={`text-sm ${theme.text.muted}`}>Accuracy</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-5">
+              <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-5`}>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                    <Clock size={20} className="text-purple-600 dark:text-purple-400" />
+                  <div className={`p-2 ${theme.isDark ? 'bg-purple-900/30' : 'bg-purple-100'} rounded-lg`}>
+                    <Clock size={20} className={`${theme.isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{reportData.overview.avgTime}</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Avg. Time</p>
+                    <p className={`text-sm ${theme.text.muted}`}>Avg. Time</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-5">
+              <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-5`}>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                  <div className={`p-2 ${theme.isDark ? 'bg-amber-900/30' : 'bg-amber-100'} rounded-lg`}>
                     <Award size={20} className="text-amber-600 dark:text-amber-400" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{reportData.overview.rank}</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Rank</p>
+                    <p className={`text-sm ${theme.text.muted}`}>Rank</p>
                   </div>
                 </div>
               </div>
@@ -217,7 +219,7 @@ const ReportsPage = () => {
                   </div>
                   <div>
                     <p className="text-2xl font-bold">+{reportData.overview.improvement}%</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Improvement</p>
+                    <p className={`text-sm ${theme.text.muted}`}>Improvement</p>
                   </div>
                 </div>
               </div>
@@ -229,20 +231,20 @@ const ReportsPage = () => {
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{reportData.overview.consistency}%</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Consistency</p>
+                    <p className={`text-sm ${theme.text.muted}`}>Consistency</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Daily Activity */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6">
+            <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-6`}>
               <h2 className="text-xl font-semibold mb-6">Daily Activity</h2>
               <div className="grid grid-cols-7 gap-2">
                 {reportData.dailyActivity.map((day, index) => (
                   <div key={index} className="text-center">
-                    <div className="text-sm text-slate-500 dark:text-slate-400 mb-2">{day.day}</div>
-                    <div className="h-24 bg-slate-100 dark:bg-slate-700 rounded-lg flex flex-col justify-end p-2">
+                    <div className={`text-sm ${theme.text.muted} mb-2`}>{day.day}</div>
+                    <div className={`h-24 ${theme.bg.hover} rounded-lg flex flex-col justify-end p-2`}>
                       <div 
                         className="bg-indigo-600 rounded-lg mb-1"
                         style={{ height: `${(day.problems / 20) * 100}%` }}
