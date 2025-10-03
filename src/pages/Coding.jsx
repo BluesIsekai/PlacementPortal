@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { 
   Code2, Play, Save, RotateCcw, BookOpen, 
   Timer, ChevronDown, ChevronUp, Filter, 
@@ -9,6 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 
+
 const CodingPage = () => {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -18,7 +19,58 @@ const CodingPage = () => {
   const [expandedProblem, setExpandedProblem] = useState(null);
   const [code, setCode] = useState("// Write your code here\nfunction solveProblem(input) {\n  // Your solution\n  return input;\n}");
   const [isRunning, setIsRunning] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("JavaScript");
   const [output, setOutput] = useState("");
+  const [input, setInput] = useState("");
+
+  const Lang = {
+  "C": {
+    "name": "c",
+    "version": "10.2.0",
+    "filename": "my_cool_code.c"
+  },
+  "C#": {
+    "name": "csharp",
+    "version": "6.12.0",
+    "filename": "my_cool_code.cs"
+  },
+  "C++": {
+    "name": "c++",
+    "version": "10.2.0",
+    "filename": "my_cool_code.cpp"
+  },
+  "Go": {
+    "name": "go",
+    "version": "1.16.2",
+    "filename": "my_cool_code.go"
+  },
+  "Java": {
+    "name": "java",
+    "version": "15.0.2",
+    "filename": "my_cool_code.java"
+  },
+  "JavaScript": {
+    "name": "javascript",
+    "version": "18.15.0",
+    "filename": "my_cool_code.js"
+  },
+  "PHP": {
+    "name": "php",
+    "version": "8.2.3",
+    "filename": "my_cool_code.php"
+  },
+  "Python": {
+    "name": "python",
+    "version": "3.10.0",
+    "filename": "my_cool_code.py"
+  },
+  "Ruby": {
+    "name": "ruby",
+    "version": "3.0.1",
+    "filename": "my_cool_code.rb"
+  }
+};
+
 
   // Sample coding problems
   const problems = [
@@ -192,19 +244,54 @@ const CodingPage = () => {
     return true;
   });
 
-  const runCode = () => {
+  const runCode = async () => {
     setIsRunning(true);
-    // Simulate code execution
-    setTimeout(() => {
-      setOutput("Code executed successfully!\n\nTest Cases:\n✓ Test case 1 passed\n✓ Test case 2 passed\n✓ Test case 3 passed\n\nAll test cases passed!");
-      setIsRunning(false);
-    }, 2000);
+    const body=JSON.stringify({
+      language: Lang[selectedLanguage].name,
+      version: Lang[selectedLanguage].version,
+      files: [
+        {
+          name: Lang[selectedLanguage].filename,
+          content: `${code}`,
+        },
+      ],
+      stdin:input,
+      args: [],
+      compile_timeout: 10000,
+      run_timeout: 3000,
+      compile_memory_limit: -1,
+      run_memory_limit: -1,
+    })
+
+    console.log(input)
+    const res = await fetch("https://emkc.org/api/v2/piston/execute", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body:body,
+  });
+  const data = await res.json();
+  if(data.run.stdout){
+    setOutput(data.run.stdout);
+
+  }else if(data.run.stderr){
+    
+    setOutput(data.run.stderr);
+  }
+    setIsRunning(false);
+
+
+
   };
+
+
 
   const resetCode = () => {
     setCode("// Write your code here\nfunction solveProblem(input) {\n  // Your solution\n  return input;\n}");
     setOutput("");
   };
+
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
@@ -227,7 +314,6 @@ const CodingPage = () => {
     Ruby: "# Write your Ruby code here\ndef solve_problem(input)\n  # Your solution\n  input\nend"
   };
 
-  const [selectedLanguage, setSelectedLanguage] = useState("JavaScript");
 
   const handleLanguageChange = (e) => {
     const newLanguage = e.target.value;
@@ -489,13 +575,16 @@ const CodingPage = () => {
                         ))}
                       </select>
                     </div>
-                    
                     <textarea
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
                       className="w-full h-96 p-4 font-mono text-sm focus:outline-none resize-none bg-slate-50 dark:bg-slate-900/50"
                       spellCheck="false"
                     />
+                    <div className="bg-slate-100 m-5 rounded-sm dark:bg-slate-900/50">
+                    <h1 className="font-medium p-2 mx-5 rounded">Input</h1>
+                    <textarea type="text" value={input} onChange={(e)=>{setInput(e.target.value)}} className="w-full h-48 p-4 font-mono text-sm focus:outline-none resize-none "/>
+                    </div>
                   </div>
                   
                   <div className="p-4 border-t border-slate-200 dark:border-slate-700">
