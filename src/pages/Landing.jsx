@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTheme } from "../context/ThemeContext";
 import { 
   GraduationCap, Code2, Building2, BookOpen, 
   Award, Users, ChevronRight, ArrowRight, Star, 
@@ -10,6 +11,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
+  const theme = useTheme();
   const [isLogin, setIsLogin] = useState(true);
   const [animateFeatures, setAnimateFeatures] = useState(false);
   const [animateStats, setAnimateStats] = useState(false);
@@ -154,7 +156,7 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white overflow-hidden">
+    <div className={`min-h-screen ${theme.bg.primary} ${theme.text.primary} overflow-hidden`}>
       {/* Enhanced Animated background elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         {[...Array(25)].map((_, i) => (
@@ -217,39 +219,39 @@ const LandingPage = () => {
       </div>
 
       {/* Header */}
-      <header className="relative z-10 py-6 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+  <header className="relative z-10 py-6 px-4 sm:px-6 lg:px-8">
+  <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-violet-600 grid place-content-center font-bold">
+            <div className={`relative h-12 w-12 rounded-xl ${theme.bg.accent} grid place-content-center font-bold`}>
               <div className="relative flex flex-col items-center justify-center">
                 <GraduationCap className="text-yellow-300" size={20} />
-                <div className="text-white font-black text-lg tracking-wide" style={{ textShadow: '0 0 8px rgba(255,255,255,0.5)', fontFamily: 'monospace', lineHeight: '0.4', marginTop: '-4px' }}>
+                <div className={`font-black text-lg tracking-wide ${theme.text.primary}`} style={{ textShadow: '0 0 8px rgba(255,255,255,0.5)', fontFamily: 'monospace', lineHeight: '0.4', marginTop: '-4px' }}>
                   P<span className="text-yellow-300">P</span>
                 </div>
               </div>
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
+            <span className={`text-xl font-bold ${theme.text.gradient}`}> 
               Placement Portal
             </span>
           </div>
           
           <nav className="hidden md:flex items-center gap-8">
-            <button onClick={() => navigate('/features')} className="hover:text-indigo-300 transition-colors hover:scale-105 transform duration-200 bg-transparent border-none outline-none cursor-pointer">Features</button>
-            <a href="#testimonials" className="hover:text-indigo-300 transition-colors hover:scale-105 transform duration-200">Testimonials</a>
-            <a href="#resources" className="hover:text-indigo-300 transition-colors hover:scale-105 transform duration-200">Resources</a>
-            <a href="#contact" className="hover:text-indigo-300 transition-colors hover:scale-105 transform duration-200">Contact</a>
+            <button onClick={() => navigate('/features')} className={`hover:${theme.text.accent} transition-colors hover:scale-105 transform duration-200 bg-transparent border-none outline-none cursor-pointer`}>Features</button>
+            <a href="#testimonials" className={`hover:${theme.text.accent} transition-colors hover:scale-105 transform duration-200`}>Testimonials</a>
+            <a href="#resources" className={`hover:${theme.text.accent} transition-colors hover:scale-105 transform duration-200`}>Resources</a>
+            <a href="#contact" className={`hover:${theme.text.accent} transition-colors hover:scale-105 transform duration-200`}>Contact</a>
           </nav>
           
           <div className="flex gap-3">
             <button 
               onClick={() => navigate('/login')}
-              className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 transition-colors font-medium hover:scale-105 transform duration-200 shadow-lg shadow-indigo-500/20"
+              className={`px-4 py-2 rounded-lg ${theme.bg.buttonPrimary} ${theme.bg.buttonPrimaryHover} transition-colors font-medium hover:scale-105 transform duration-200 shadow-lg`}
             >
               Login
             </button>
             <button 
               onClick={() => navigate('/signup')}
-              className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-colors font-medium hover:scale-105 transform duration-200"
+              className={`px-4 py-2 rounded-lg ${theme.bg.buttonSecondary} border ${theme.border.primary} ${theme.bg.buttonSecondaryHover} transition-colors font-medium hover:scale-105 transform duration-200`}
             >
               Sign Up
             </button>
