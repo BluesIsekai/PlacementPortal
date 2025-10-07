@@ -212,25 +212,25 @@ const ReportsPage = () => {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-5">
+              <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-5`}>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-                    <TrendingUp size={20} className="text-indigo-600 dark:text-indigo-400" />
+                  <div className={`p-2 ${theme.isDark ? 'bg-indigo-900/30' : 'bg-indigo-100'} rounded-lg`}>
+                    <TrendingUp size={20} className={`${theme.isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">+{reportData.overview.improvement}%</p>
+                    <p className={`text-2xl font-bold ${theme.text.primary}`}>+{reportData.overview.improvement}%</p>
                     <p className={`text-sm ${theme.text.muted}`}>Improvement</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-5">
+              <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-5`}>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg">
-                    <PieChart size={20} className="text-teal-600 dark:text-teal-400" />
+                  <div className={`p-2 ${theme.isDark ? 'bg-teal-900/30' : 'bg-teal-100'} rounded-lg`}>
+                    <PieChart size={20} className={`${theme.isDark ? 'text-teal-400' : 'text-teal-600'}`} />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{reportData.overview.consistency}%</p>
+                    <p className={`text-2xl font-bold ${theme.text.primary}`}>{reportData.overview.consistency}%</p>
                     <p className={`text-sm ${theme.text.muted}`}>Consistency</p>
                   </div>
                 </div>
@@ -251,8 +251,8 @@ const ReportsPage = () => {
                       ></div>
                     </div>
                     <div className="mt-2 text-sm">
-                      <div className="font-medium">{day.problems} problems</div>
-                      <div className="text-slate-500 dark:text-slate-400">{day.time}</div>
+                      <div className={`font-medium ${theme.text.primary}`}>{day.problems} problems</div>
+                      <div className={`${theme.text.muted}`}>{day.time}</div>
                     </div>
                   </div>
                 ))}
@@ -260,12 +260,12 @@ const ReportsPage = () => {
             </div>
 
             {/* Category Performance */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6">
+            <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-6`}>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold">Category Performance</h2>
+                <h2 className={`text-xl font-semibold ${theme.text.primary}`}>Category Performance</h2>
                 <button 
                   onClick={() => setShowDetailedView(!showDetailedView)}
-                  className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-sm font-medium"
+                  className={`flex items-center gap-2 ${theme.isDark ? 'text-indigo-400' : 'text-indigo-600'} text-sm font-medium`}
                 >
                   {showDetailedView ? <EyeOff size={16} /> : <Eye size={16} />}
                   {showDetailedView ? "Hide Details" : "Show Details"}
@@ -286,14 +286,14 @@ const ReportsPage = () => {
                         </span>
                       </div>
                     </div>
-                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                    <div className={`w-full ${theme.isDark ? 'bg-slate-700' : 'bg-slate-200'} rounded-full h-2.5`}>
                       <div 
                         className="bg-indigo-600 h-2.5 rounded-full" 
                         style={{ width: `${category.score}%` }}
                       ></div>
                     </div>
                     {showDetailedView && (
-                      <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400 mt-2">
+                      <div className={`flex justify-between text-sm ${theme.text.muted} mt-2`}>
                         <span>{category.questions} questions practiced</span>
                         <span>+{category.improvement}% improvement</span>
                       </div>
@@ -307,24 +307,24 @@ const ReportsPage = () => {
 
         {/* Category Performance Tab */}
         {activeTab === "category" && (
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-6">Performance by Category</h2>
+          <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-6`}>
+            <h2 className={`text-xl font-semibold mb-6 ${theme.text.primary}`}>Performance by Category</h2>
             
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-700">
-                    <th className="pb-3 text-left">Category</th>
-                    <th className="pb-3 text-center">Score</th>
-                    <th className="pb-3 text-center">Improvement</th>
-                    <th className="pb-3 text-center">Questions</th>
-                    <th className="pb-3 text-center">Trend</th>
+                  <tr className={`border-b ${theme.border.primary}`}>
+                    <th className={`pb-3 text-left ${theme.text.primary}`}>Category</th>
+                    <th className={`pb-3 text-center ${theme.text.primary}`}>Score</th>
+                    <th className={`pb-3 text-center ${theme.text.primary}`}>Improvement</th>
+                    <th className={`pb-3 text-center ${theme.text.primary}`}>Questions</th>
+                    <th className={`pb-3 text-center ${theme.text.primary}`}>Trend</th>
                   </tr>
                 </thead>
                 <tbody>
                   {reportData.categoryPerformance.map((category, index) => (
-                    <tr key={index} className="border-b border-slate-100 dark:border-slate-800">
-                      <td className="py-4 font-medium">{category.category}</td>
+                    <tr key={index} className={`border-b ${theme.border.secondary}`}>
+                      <td className={`py-4 font-medium ${theme.text.primary}`}>{category.category}</td>
                       <td className="py-4 text-center">
                         <span className={`font-semibold ${getScoreColor(category.score)}`}>
                           {category.score}%
@@ -351,20 +351,20 @@ const ReportsPage = () => {
 
         {/* Difficulty Performance Tab */}
         {activeTab === "difficulty" && (
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-6">Performance by Difficulty</h2>
+          <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-6`}>
+            <h2 className={`text-xl font-semibold mb-6 ${theme.text.primary}`}>Performance by Difficulty</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {reportData.difficultyPerformance.map((difficulty, index) => (
-                <div key={index} className="bg-slate-50 dark:bg-slate-700/30 rounded-lg p-5">
-                  <h3 className="font-semibold mb-4">{difficulty.difficulty}</h3>
+                <div key={index} className={`${theme.bg.secondary} rounded-lg p-5`}>
+                  <h3 className={`font-semibold mb-4 ${theme.text.primary}`}>{difficulty.difficulty}</h3>
                   <div className="space-y-3">
                     <div>
-                      <div className="flex justify-between text-sm mb-1">
+                      <div className={`flex justify-between text-sm mb-1 ${theme.text.secondary}`}>
                         <span>Solved</span>
-                        <span className="font-medium">{difficulty.solved}</span>
+                        <span className={`font-medium ${theme.text.primary}`}>{difficulty.solved}</span>
                       </div>
-                      <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2">
+                      <div className={`w-full ${theme.isDark ? 'bg-slate-600' : 'bg-slate-200'} rounded-full h-2`}>
                         <div 
                           className="bg-indigo-600 h-2 rounded-full" 
                           style={{ width: `${(difficulty.solved / 150) * 100}%` }}
@@ -373,11 +373,11 @@ const ReportsPage = () => {
                     </div>
                     
                     <div>
-                      <div className="flex justify-between text-sm mb-1">
+                      <div className={`flex justify-between text-sm mb-1 ${theme.text.secondary}`}>
                         <span>Accuracy</span>
-                        <span className="font-medium">{difficulty.accuracy}%</span>
+                        <span className={`font-medium ${theme.text.primary}`}>{difficulty.accuracy}%</span>
                       </div>
-                      <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2">
+                      <div className={`w-full ${theme.isDark ? 'bg-slate-600' : 'bg-slate-200'} rounded-full h-2`}>
                         <div 
                           className="bg-green-600 h-2 rounded-full" 
                           style={{ width: `${difficulty.accuracy}%` }}
@@ -386,11 +386,11 @@ const ReportsPage = () => {
                     </div>
                     
                     <div>
-                      <div className="flex justify-between text-sm mb-1">
+                      <div className={`flex justify-between text-sm mb-1 ${theme.text.secondary}`}>
                         <span>Avg. Time</span>
-                        <span className="font-medium">{difficulty.avgTime}</span>
+                        <span className={`font-medium ${theme.text.primary}`}>{difficulty.avgTime}</span>
                       </div>
-                      <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2">
+                      <div className={`w-full ${theme.isDark ? 'bg-slate-600' : 'bg-slate-200'} rounded-full h-2`}>
                         <div 
                           className="bg-amber-600 h-2 rounded-full" 
                           style={{ width: `${(parseFloat(difficulty.avgTime) / 10) * 100}%` }}
@@ -406,23 +406,23 @@ const ReportsPage = () => {
 
         {/* Company Wise Tab */}
         {activeTab === "company" && (
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-6">Company-wise Preparation</h2>
+          <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-6`}>
+            <h2 className={`text-xl font-semibold mb-6 ${theme.text.primary}`}>Company-wise Preparation</h2>
             
             <div className="space-y-4">
               {reportData.companyWise.map((company, index) => (
                 <div key={index}>
-                  <div className="flex justify-between items-center mb-2">
+                  <div className={`flex justify-between items-center mb-2 ${theme.text.primary}`}>
                     <span className="font-medium">{company.company}</span>
                     <span className="font-semibold">{company.prepared}% prepared</span>
                   </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                  <div className={`w-full ${theme.isDark ? 'bg-slate-700' : 'bg-slate-200'} rounded-full h-2.5`}>
                     <div 
                       className="bg-indigo-600 h-2.5 rounded-full" 
                       style={{ width: `${company.prepared}%` }}
                     ></div>
                   </div>
-                  <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400 mt-2">
+                  <div className={`flex justify-between text-sm ${theme.text.muted} mt-2`}>
                     <span>{company.questions} questions practiced</span>
                     <span>{company.prepared}% prepared</span>
                   </div>
@@ -434,24 +434,24 @@ const ReportsPage = () => {
 
         {/* Mock Tests Tab */}
         {activeTab === "tests" && (
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-6">Mock Test Performance</h2>
+          <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-6`}>
+            <h2 className={`text-xl font-semibold mb-6 ${theme.text.primary}`}>Mock Test Performance</h2>
             
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-700">
-                    <th className="pb-3 text-left">Test Name</th>
-                    <th className="pb-3 text-center">Score</th>
-                    <th className="pb-3 text-center">Percentile</th>
-                    <th className="pb-3 text-center">Time Spent</th>
-                    <th className="pb-3 text-center">Details</th>
+                  <tr className={`border-b ${theme.border.primary}`}>
+                    <th className={`pb-3 text-left ${theme.text.primary}`}>Test Name</th>
+                    <th className={`pb-3 text-center ${theme.text.primary}`}>Score</th>
+                    <th className={`pb-3 text-center ${theme.text.primary}`}>Percentile</th>
+                    <th className={`pb-3 text-center ${theme.text.primary}`}>Time Spent</th>
+                    <th className={`pb-3 text-center ${theme.text.primary}`}>Details</th>
                   </tr>
                 </thead>
                 <tbody>
                   {reportData.mockTests.map((test, index) => (
-                    <tr key={index} className="border-b border-slate-100 dark:border-slate-800">
-                      <td className="py-4 font-medium">{test.test}</td>
+                    <tr key={index} className={`border-b ${theme.border.secondary}`}>
+                      <td className={`py-4 font-medium ${theme.text.primary}`}>{test.test}</td>
                       <td className="py-4 text-center">
                         <span className={`font-semibold ${getScoreColor(test.score)}`}>
                           {test.score}%

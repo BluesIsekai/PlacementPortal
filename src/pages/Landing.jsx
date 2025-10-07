@@ -11,7 +11,44 @@ import {
 import { useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
-  const theme = useTheme();
+  const theme = useTheme(); // Still get theme for any shared utilities
+  
+  // Force dark theme for landing page only
+  const darkTheme = {
+    bg: {
+      primary: 'bg-slate-950',
+      secondary: 'bg-slate-900',
+      tertiary: 'bg-slate-800',
+      card: 'bg-slate-900/60',
+      hover: 'hover:bg-slate-800',
+      cardHover: 'hover:bg-slate-800/40',
+      navbar: 'bg-slate-950/80',
+      overlay: 'bg-black/70',
+      accent: 'bg-indigo-600',
+      buttonPrimary: 'bg-indigo-600',
+      buttonPrimaryHover: 'hover:bg-indigo-700',
+      buttonSecondary: 'bg-slate-800',
+      buttonSecondaryHover: 'hover:bg-slate-700',
+    },
+    text: {
+      primary: 'text-slate-100',
+      secondary: 'text-slate-300',
+      tertiary: 'text-slate-400',
+      muted: 'text-slate-500',
+      accent: 'text-indigo-400',
+      gradient: 'text-indigo-400',
+    },
+    border: {
+      primary: 'border-slate-800',
+      secondary: 'border-slate-700',
+      hover: 'hover:border-indigo-500/30',
+    },
+    shadow: {
+      card: 'shadow-xl',
+      hover: 'shadow-2xl',
+    },
+  };
+  
   const [isLogin, setIsLogin] = useState(true);
   const [animateFeatures, setAnimateFeatures] = useState(false);
   const [animateStats, setAnimateStats] = useState(false);
@@ -156,7 +193,7 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className={`min-h-screen ${theme.bg.primary} ${theme.text.primary} overflow-hidden`}>
+    <div className={`min-h-screen ${darkTheme.bg.primary} ${darkTheme.text.primary} overflow-hidden dark`}>
       {/* Enhanced Animated background elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         {[...Array(25)].map((_, i) => (
@@ -222,36 +259,36 @@ const LandingPage = () => {
   <header className="relative z-10 py-6 px-4 sm:px-6 lg:px-8">
   <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className={`relative h-12 w-12 rounded-xl ${theme.bg.accent} grid place-content-center font-bold`}>
+            <div className={`relative h-12 w-12 rounded-xl ${darkTheme.bg.accent} grid place-content-center font-bold`}>
               <div className="relative flex flex-col items-center justify-center">
                 <GraduationCap className="text-yellow-300" size={20} />
-                <div className={`font-black text-lg tracking-wide ${theme.text.primary}`} style={{ textShadow: '0 0 8px rgba(255,255,255,0.5)', fontFamily: 'monospace', lineHeight: '0.4', marginTop: '-4px' }}>
+                <div className={`font-black text-lg tracking-wide ${darkTheme.text.primary}`} style={{ textShadow: '0 0 8px rgba(255,255,255,0.5)', fontFamily: 'monospace', lineHeight: '0.4', marginTop: '-4px' }}>
                   P<span className="text-yellow-300">P</span>
                 </div>
               </div>
             </div>
-            <span className={`text-xl font-bold ${theme.text.gradient}`}> 
+            <span className={`text-xl font-bold ${darkTheme.text.gradient}`}> 
               Placement Portal
             </span>
           </div>
           
           <nav className="hidden md:flex items-center gap-8">
-            <button onClick={() => navigate('/features')} className={`hover:${theme.text.accent} transition-colors hover:scale-105 transform duration-200 bg-transparent border-none outline-none cursor-pointer`}>Features</button>
-            <a href="#testimonials" className={`hover:${theme.text.accent} transition-colors hover:scale-105 transform duration-200`}>Testimonials</a>
-            <a href="#resources" className={`hover:${theme.text.accent} transition-colors hover:scale-105 transform duration-200`}>Resources</a>
-            <a href="#contact" className={`hover:${theme.text.accent} transition-colors hover:scale-105 transform duration-200`}>Contact</a>
+            <button onClick={() => navigate('/features')} className={`hover:${darkTheme.text.accent} transition-colors hover:scale-105 transform duration-200 bg-transparent border-none outline-none cursor-pointer`}>Features</button>
+            <a href="#testimonials" className={`hover:${darkTheme.text.accent} transition-colors hover:scale-105 transform duration-200`}>Testimonials</a>
+            <a href="#resources" className={`hover:${darkTheme.text.accent} transition-colors hover:scale-105 transform duration-200`}>Resources</a>
+            <a href="#contact" className={`hover:${darkTheme.text.accent} transition-colors hover:scale-105 transform duration-200`}>Contact</a>
           </nav>
           
           <div className="flex gap-3">
             <button 
               onClick={() => navigate('/login')}
-              className={`px-4 py-2 rounded-lg ${theme.bg.buttonPrimary} ${theme.bg.buttonPrimaryHover} transition-colors font-medium hover:scale-105 transform duration-200 shadow-lg`}
+              className={`px-4 py-2 rounded-lg ${darkTheme.bg.buttonPrimary} ${darkTheme.bg.buttonPrimaryHover} transition-colors font-medium hover:scale-105 transform duration-200 shadow-lg`}
             >
               Login
             </button>
             <button 
               onClick={() => navigate('/signup')}
-              className={`px-4 py-2 rounded-lg ${theme.bg.buttonSecondary} border ${theme.border.primary} ${theme.bg.buttonSecondaryHover} transition-colors font-medium hover:scale-105 transform duration-200`}
+              className={`px-4 py-2 rounded-lg ${darkTheme.bg.buttonSecondary} border ${darkTheme.border.primary} ${darkTheme.bg.buttonSecondaryHover} transition-colors font-medium hover:scale-105 transform duration-200`}
             >
               Sign Up
             </button>
@@ -265,10 +302,10 @@ const LandingPage = () => {
           <div className="flex flex-col lg:flex-row items-center gap-16">
             {/* Left side - Content */}
             <div className="lg:w-2/3 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-slate-800/50 backdrop-blur-sm rounded-full px-4 py-2 mb-6 border border-slate-700/30">
+              <div className={`inline-flex items-center gap-2 ${darkTheme.bg.secondary} backdrop-blur-sm rounded-full px-4 py-2 mb-6 border ${darkTheme.border.primary}`}>
                 <Rocket className="h-5 w-5 text-indigo-400 animate-bounce" />
-                <span className="text-sm">Trusted by 50,000+ students</span>
-                <ChevronDown className="h-4 w-4 text-slate-400 animate-bounce" />
+                <span className={`text-sm ${darkTheme.text.primary}`}>Trusted by 50,000+ students</span>
+                <ChevronDown className={`h-4 w-4 ${darkTheme.text.muted} animate-bounce`} />
               </div>
               
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
@@ -276,7 +313,7 @@ const LandingPage = () => {
                 <span className="bg-gradient-to-r from-indigo-400 to-violet-500 bg-clip-text text-transparent"> Tech Career</span>
               </h1>
               
-              <p className="text-xl text-slate-300 mb-8 max-w-2xl">
+              <p className={`text-xl ${darkTheme.text.secondary} mb-8 max-w-2xl`}>
                 The all-in-one platform to ace your placement preparations. Practice coding, attempt mock tests, and get placed in your dream company.
               </p>
               
@@ -296,15 +333,15 @@ const LandingPage = () => {
                 {stats.map((stat, index) => (
                   <div 
                     key={index} 
-                    className="text-center lg:text-left bg-slate-800/40 backdrop-blur-sm p-4 rounded-xl border border-slate-700/30 hover:border-indigo-500/30 transition-all duration-300 hover:scale-105 transform"
+                    className={`text-center lg:text-left ${darkTheme.bg.secondary} backdrop-blur-sm p-4 rounded-xl border ${darkTheme.border.primary} hover:border-indigo-500/30 transition-all duration-300 hover:scale-105 transform`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-slate-700/50 rounded-lg">
+                      <div className={`p-2 ${darkTheme.bg.tertiary} rounded-lg`}>
                         {stat.icon}
                       </div>
                       <div>
-                        <div className="text-2xl font-bold mb-1">{stat.value}</div>
-                        <div className="text-slate-400 text-sm">{stat.label}</div>
+                        <div className={`text-2xl font-bold mb-1 ${darkTheme.text.primary}`}>{stat.value}</div>
+                        <div className={`${darkTheme.text.muted} text-sm`}>{stat.label}</div>
                       </div>
                     </div>
                   </div>
@@ -314,20 +351,20 @@ const LandingPage = () => {
             
             {/* Right side - Animated Feature Showcase */}
             <div className="lg:w-1/3 w-full max-w-md mx-auto">
-              <div className="bg-slate-800/70 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-slate-700/50 hover:shadow-indigo-500/10 hover:border-indigo-500/30 transition-all duration-500">
+              <div className={`${darkTheme.bg.card} backdrop-blur-md rounded-2xl p-6 ${darkTheme.shadow.card} border ${darkTheme.border.primary} hover:shadow-indigo-500/10 hover:border-indigo-500/30 transition-all duration-500`}>
                 <div className="flex justify-center mb-6">
                   {features[activeFeature].icon}
                 </div>
                 
-                <h3 className="text-xl font-semibold text-center mb-3">
+                <h3 className={`text-xl font-semibold text-center mb-3 ${darkTheme.text.primary}`}>
                   {features[activeFeature].title}
                 </h3>
                 
-                <p className="text-slate-400 text-center mb-4">
+                <p className={`${darkTheme.text.muted} text-center mb-4`}>
                   {features[activeFeature].description}
                 </p>
                 
-                <p className="text-slate-300 text-sm text-center">
+                <p className={`${darkTheme.text.secondary} text-sm text-center`}>
                   {features[activeFeature].details}
                 </p>
                 
@@ -337,7 +374,7 @@ const LandingPage = () => {
                       <button
                         key={index}
                         onClick={() => setActiveFeature(index)}
-                        className={`h-2 rounded-full transition-all duration-300 ${index === activeFeature ? 'w-6 bg-indigo-500' : 'w-2 bg-slate-600'}`}
+                        className={`h-2 rounded-full transition-all duration-300 ${index === activeFeature ? 'w-6 bg-indigo-500' : `w-2 ${darkTheme.bg.muted}`}`}
                         aria-label={`Feature ${index + 1}`}
                       />
                     ))}
@@ -347,15 +384,15 @@ const LandingPage = () => {
 
               {/* Benefits List */}
               <div className="mt-8 space-y-4">
-                <div className="flex items-center gap-3 text-slate-300 p-3 bg-slate-800/40 backdrop-blur-sm rounded-lg border border-slate-700/30 hover:border-indigo-500/30 transition-all duration-300">
+                <div className={`flex items-center gap-3 ${darkTheme.text.primary} p-3 ${darkTheme.bg.secondary} backdrop-blur-sm rounded-lg border ${darkTheme.border.primary} hover:border-indigo-500/30 transition-all duration-300`}>
                   <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
                   <span>Access to all practice materials</span>
                 </div>
-                <div className="flex items-center gap-3 text-slate-300 p-3 bg-slate-800/40 backdrop-blur-sm rounded-lg border border-slate-700/30 hover:border-indigo-500/30 transition-all duration-300">
+                <div className={`flex items-center gap-3 ${darkTheme.text.primary} p-3 ${darkTheme.bg.secondary} backdrop-blur-sm rounded-lg border ${darkTheme.border.primary} hover:border-indigo-500/30 transition-all duration-300`}>
                   <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
                   <span>Personalized progress tracking</span>
                 </div>
-                <div className="flex items-center gap-3 text-slate-300 p-3 bg-slate-800/40 backdrop-blur-sm rounded-lg border border-slate-700/30 hover:border-indigo-500/30 transition-all duration-300">
+                <div className={`flex items-center gap-3 ${darkTheme.text.primary} p-3 ${darkTheme.bg.secondary} backdrop-blur-sm rounded-lg border ${darkTheme.border.primary} hover:border-indigo-500/30 transition-all duration-300`}>
                   <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
                   <span>Company-specific preparation</span>
                 </div>
@@ -365,23 +402,23 @@ const LandingPage = () => {
         </section>
         
         {/* Features Section */}
-        <section id="features" className="relative py-16 lg:py-24 bg-slate-800/30">
+        <section id="features" className={`relative py-16 lg:py-24 ${darkTheme.bg.secondary}`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-4xl font-bold mb-4">Everything You Need to <span className="text-indigo-400">Get Placed</span></h2>
-              <p className="text-xl text-slate-400 max-w-3xl mx-auto">Our comprehensive platform provides all the tools you need to ace your placement process</p>
+              <p className={`text-xl ${darkTheme.text.secondary} max-w-3xl mx-auto`}>Our comprehensive platform provides all the tools you need to ace your placement process</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {features.map((feature, index) => (
                 <div 
                   key={index}
-                  className={`bg-slate-800/40 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30 hover:border-indigo-500/30 transition-all duration-500 hover:scale-105 transform ${animateFeatures ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                  className={`${darkTheme.bg.card} backdrop-blur-sm rounded-xl p-6 border ${darkTheme.border.primary} hover:border-indigo-500/30 transition-all duration-500 hover:scale-105 transform ${animateFeatures ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
                   style={{ transitionDelay: `${index * 100}ms` }}
                 >
                   <div className="mb-4">{feature.icon}</div>
                   <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-slate-400">{feature.description}</p>
+                  <p className={theme.text.secondary}>{feature.description}</p>
                   <button className="mt-4 text-indigo-400 hover:text-indigo-300 text-sm font-medium flex items-center gap-1">
                     Learn more <ArrowRight size={14} />
                   </button>
@@ -396,14 +433,14 @@ const LandingPage = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-4xl font-bold mb-4">What Our <span className="text-indigo-400">Students Say</span></h2>
-              <p className="text-xl text-slate-400 max-w-3xl mx-auto">Hear from students who have successfully secured their dream jobs using our platform</p>
+              <p className={`text-xl ${darkTheme.text.secondary} max-w-3xl mx-auto`}>Hear from students who have successfully secured their dream jobs using our platform</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {testimonials.map((testimonial, index) => (
                 <div 
                   key={index}
-                  className={`bg-slate-800/40 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30 hover:border-indigo-500/30 transition-all duration-300 hover:scale-105 transform ${animateTestimonials ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                  className={`${darkTheme.bg.card} backdrop-blur-sm rounded-xl p-6 border ${darkTheme.border.primary} hover:border-indigo-500/30 transition-all duration-300 hover:scale-105 transform ${animateTestimonials ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
                   style={{ transitionDelay: `${index * 200}ms` }}
                 >
                   <div className="flex items-center gap-4 mb-4">
@@ -415,7 +452,7 @@ const LandingPage = () => {
                       <p className="text-sm text-indigo-400">{testimonial.role}</p>
                     </div>
                   </div>
-                  <p className="text-slate-400">"{testimonial.content}"</p>
+                  <p className={theme.text.secondary}>"{testimonial.content}"</p>
                   <div className="flex mt-4">
                     {[...Array(testimonial.rating)].map((_, i) => (
                       <Star key={i} size={16} className="text-amber-400 fill-amber-400" />
@@ -428,10 +465,10 @@ const LandingPage = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="relative py-16 lg:py-24 bg-slate-800/50">
+        <section className={`relative py-16 lg:py-24 ${darkTheme.bg.secondary}`}>
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl lg:text-4xl font-bold mb-6">Ready to <span className="text-indigo-400">Transform Your Career</span>?</h2>
-            <p className="text-xl text-slate-400 mb-8">Join thousands of students who have secured their dream jobs through our platform</p>
+            <p className={`text-xl ${darkTheme.text.secondary} mb-8`}>Join thousands of students who have secured their dream jobs through our platform</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button 
                 onClick={() => navigate('/signup')}
@@ -450,7 +487,7 @@ const LandingPage = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-4xl font-bold mb-4">How It <span className="text-indigo-400">Works</span></h2>
-              <p className="text-xl text-slate-400 max-w-3xl mx-auto">Simple steps to ace your placement preparation and land your dream job</p>
+              <p className={`text-xl ${darkTheme.text.secondary} max-w-3xl mx-auto`}>Simple steps to ace your placement preparation and land your dream job</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -462,7 +499,7 @@ const LandingPage = () => {
                   <div className="absolute top-10 left-1/2 w-full h-0.5 bg-gradient-to-r from-indigo-500 to-violet-600 hidden lg:block transform -translate-x-1/2 animate-pulse"></div>
                 </div>
                 <h3 className="text-xl font-semibold mb-3 group-hover:text-indigo-400 transition-colors duration-300">Sign Up</h3>
-                <p className="text-slate-400 group-hover:text-slate-300 transition-colors duration-300">Create your account and set up your personalized learning profile</p>
+                <p className={`${darkTheme.text.secondary} group-hover:${darkTheme.text.primary} transition-colors duration-300`}>Create your account and set up your personalized learning profile</p>
               </div>
               
               <div className={`text-center group ${animateHowItWorks ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} transition-all duration-700`} style={{ transitionDelay: '200ms' }}>
@@ -473,7 +510,7 @@ const LandingPage = () => {
                   <div className="absolute top-10 left-1/2 w-full h-0.5 bg-gradient-to-r from-green-500 to-teal-600 hidden lg:block transform -translate-x-1/2 animate-pulse"></div>
                 </div>
                 <h3 className="text-xl font-semibold mb-3 group-hover:text-green-400 transition-colors duration-300">Practice</h3>
-                <p className="text-slate-400 group-hover:text-slate-300 transition-colors duration-300">Start solving coding problems, take quizzes, and practice mock interviews</p>
+                <p className={`${darkTheme.text.secondary} group-hover:${darkTheme.text.primary} transition-colors duration-300`}>Start solving coding problems, take quizzes, and practice mock interviews</p>
               </div>
               
               <div className={`text-center group ${animateHowItWorks ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} transition-all duration-700`} style={{ transitionDelay: '400ms' }}>
@@ -484,7 +521,7 @@ const LandingPage = () => {
                   <div className="absolute top-10 left-1/2 w-full h-0.5 bg-gradient-to-r from-purple-500 to-pink-600 hidden lg:block transform -translate-x-1/2 animate-pulse"></div>
                 </div>
                 <h3 className="text-xl font-semibold mb-3 group-hover:text-purple-400 transition-colors duration-300">Track Progress</h3>
-                <p className="text-slate-400 group-hover:text-slate-300 transition-colors duration-300">Monitor your improvement with detailed analytics and personalized feedback</p>
+                <p className={`${darkTheme.text.secondary} group-hover:${darkTheme.text.primary} transition-colors duration-300`}>Monitor your improvement with detailed analytics and personalized feedback</p>
               </div>
               
               <div className={`text-center group ${animateHowItWorks ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} transition-all duration-700`} style={{ transitionDelay: '600ms' }}>
@@ -494,25 +531,25 @@ const LandingPage = () => {
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold mb-3 group-hover:text-amber-400 transition-colors duration-300">Get Placed</h3>
-                <p className="text-slate-400 group-hover:text-slate-300 transition-colors duration-300">Apply confidently to your dream companies and ace the interviews</p>
+                <p className={`${darkTheme.text.secondary} group-hover:${darkTheme.text.primary} transition-colors duration-300`}>Apply confidently to your dream companies and ace the interviews</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* Companies Section */}
-        <section className="relative py-16 lg:py-24 bg-slate-800/30">
+        <section className={`relative py-16 lg:py-24 ${darkTheme.bg.secondary}`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-4xl font-bold mb-4">Trusted by Students from <span className="text-indigo-400">Top Universities</span></h2>
-              <p className="text-xl text-slate-400 max-w-3xl mx-auto">Students from prestigious institutions trust our platform for their placement preparation</p>
+              <p className={`text-xl ${darkTheme.text.secondary} max-w-3xl mx-auto`}>Students from prestigious institutions trust our platform for their placement preparation</p>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6 items-center">
               {["IIT Delhi", "IIT Mumbai", "NIT Trichy", "BITS Pilani", "VIT Chennai", "IIIT Hyderabad", "IIIT Allahabad"].map((college, index) => (
                 <div 
                   key={index} 
-                  className={`bg-slate-800/40 backdrop-blur-sm rounded-xl p-4 text-center hover:bg-slate-800/60 transition-all duration-500 hover:scale-110 hover:rotate-2 transform border border-slate-700/30 hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-500/25 ${animateCompanies ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                  className={`${darkTheme.bg.card} backdrop-blur-sm rounded-xl p-4 text-center hover:${darkTheme.bg.hover || theme.bg.secondary} transition-all duration-500 hover:scale-110 hover:rotate-2 transform border ${darkTheme.border.primary} hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-500/25 ${animateCompanies ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
                   style={{ transitionDelay: `${index * 100}ms` }}
                   onMouseEnter={() => setHoveredCard(`college-${index}`)}
                   onMouseLeave={() => setHoveredCard(null)}
@@ -531,7 +568,7 @@ const LandingPage = () => {
                 {["Google", "Microsoft", "Amazon", "Meta", "Apple", "Netflix", "Tesla", "SpaceX"].map((company, index) => (
                   <div 
                     key={index} 
-                    className={`bg-slate-800/40 backdrop-blur-sm rounded-lg p-4 text-center hover:bg-slate-800/60 transition-all duration-500 hover:scale-110 hover:-rotate-2 transform border border-slate-700/30 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/25 cursor-pointer ${animateCompanies ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                    className={`${darkTheme.bg.card} backdrop-blur-sm rounded-lg p-4 text-center hover:${darkTheme.bg.hover || theme.bg.secondary} transition-all duration-500 hover:scale-110 hover:-rotate-2 transform border ${darkTheme.border.primary} hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/25 cursor-pointer ${animateCompanies ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
                     style={{ transitionDelay: `${(index + 6) * 50}ms` }}
                     onMouseEnter={() => setHoveredCard(`company-${index}`)}
                     onMouseLeave={() => setHoveredCard(null)}
@@ -552,7 +589,7 @@ const LandingPage = () => {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-4xl font-bold mb-4">Frequently Asked <span className="text-indigo-400">Questions</span></h2>
-              <p className="text-xl text-slate-400">Everything you need to know about our placement preparation platform</p>
+              <p className={`text-xl ${darkTheme.text.secondary}`}>Everything you need to know about our placement preparation platform</p>
             </div>
             
             <div className="space-y-6">
@@ -584,7 +621,7 @@ const LandingPage = () => {
               ].map((faq, index) => (
                 <div 
                   key={index} 
-                  className={`bg-slate-800/40 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30 hover:border-indigo-500/30 transition-all duration-500 hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/10 cursor-pointer ${animateFAQ ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}
+                  className={`${darkTheme.bg.card} backdrop-blur-sm rounded-xl p-6 border ${darkTheme.border.primary} hover:border-indigo-500/30 transition-all duration-500 hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/10 cursor-pointer ${animateFAQ ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}
                   style={{ transitionDelay: `${index * 100}ms` }}
                   onMouseEnter={() => setHoveredCard(`faq-${index}`)}
                   onMouseLeave={() => setHoveredCard(null)}
@@ -595,7 +632,7 @@ const LandingPage = () => {
                     </div>
                     {faq.question}
                   </h3>
-                  <p className="text-slate-400 leading-relaxed ml-9 hover:text-slate-300 transition-colors duration-300">{faq.answer}</p>
+                  <p className={`${darkTheme.text.secondary} leading-relaxed ml-9 hover:${darkTheme.text.primary} transition-colors duration-300`}>{faq.answer}</p>
                 </div>
               ))}
             </div>
@@ -603,18 +640,18 @@ const LandingPage = () => {
         </section>
 
         {/* Newsletter Section */}
-        <section className="relative py-16 lg:py-24 bg-slate-800/50">
+        <section className={`relative py-16 lg:py-24 ${darkTheme.bg.secondary}`}>
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className={`bg-slate-800/60 backdrop-blur-md rounded-2xl p-8 border border-slate-700/50 hover:border-indigo-500/30 transition-all duration-500 hover:shadow-xl hover:shadow-indigo-500/10 ${animateNewsletter ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+            <div className={`${darkTheme.bg.card} backdrop-blur-md rounded-2xl p-8 border ${darkTheme.border.primary} hover:border-indigo-500/30 transition-all duration-500 hover:shadow-xl hover:shadow-indigo-500/10 ${animateNewsletter ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
               <Mail size={48} className={`text-indigo-400 mx-auto mb-6 transition-all duration-300 ${animateNewsletter ? 'animate-bounce' : ''}`} />
               <h2 className="text-3xl font-bold mb-4">Stay Updated with <span className="text-indigo-400">Latest Tips</span></h2>
-              <p className="text-xl text-slate-400 mb-8">Get weekly placement tips, coding challenges, and success stories delivered to your inbox</p>
+              <p className={`text-xl ${darkTheme.text.secondary} mb-8`}>Get weekly placement tips, coding challenges, and success stories delivered to your inbox</p>
               
               <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
                 <input
                   type="email"
                   placeholder="Enter your email address"
-                  className="flex-1 px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-white placeholder-slate-400 transition-all duration-300 hover:border-indigo-500/50"
+                  className={`flex-1 px-4 py-3 ${darkTheme.bg.primary} border ${darkTheme.border.primary} rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none ${darkTheme.text.primary} placeholder-${darkTheme.text.muted} transition-all duration-300 hover:border-indigo-500/50`}
                 />
                 <button className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold transition-all duration-300 hover:scale-110 hover:rotate-1 transform flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-indigo-500/50">
                   Subscribe
@@ -622,7 +659,7 @@ const LandingPage = () => {
                 </button>
               </div>
               
-              <p className="text-sm text-slate-500 mt-4 hover:text-slate-400 transition-colors duration-300">
+              <p className={`text-sm ${darkTheme.text.muted} mt-4 hover:${darkTheme.text.secondary} transition-colors duration-300`}>
                 No spam, unsubscribe at any time. Join 10,000+ students already subscribed.
               </p>
             </div>
@@ -631,7 +668,7 @@ const LandingPage = () => {
       </main>
 
       {/* Footer */}
-      <footer id="contact" className="relative bg-slate-900/80 backdrop-blur-md border-t border-slate-800/50">
+      <footer id="contact" className={`relative ${darkTheme.bg.primary} backdrop-blur-md border-t ${darkTheme.border.primary}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Brand Column */}
@@ -647,20 +684,20 @@ const LandingPage = () => {
                 </div>
                 <span className="text-xl font-bold">Placement Portal</span>
               </div>
-              <p className="text-slate-400 mb-6">
+              <p className={`${darkTheme.text.secondary} mb-6`}>
                 Your all-in-one platform for placement preparation. Practice coding, attempt mock tests, and get placed in your dream company.
               </p>
               <div className="flex gap-4">
-                <a href="#" className="text-slate-400 hover:text-indigo-400 transition-colors hover:scale-110 transform duration-200">
+                <a href="#" className={`${darkTheme.text.secondary} hover:text-indigo-400 transition-colors hover:scale-110 transform duration-200`}>
                   <Facebook size={20} />
                 </a>
-                <a href="#" className="text-slate-400 hover:text-indigo-400 transition-colors hover:scale-110 transform duration-200">
+                <a href="#" className={`${darkTheme.text.secondary} hover:text-indigo-400 transition-colors hover:scale-110 transform duration-200`}>
                   <Twitter size={20} />
                 </a>
-                <a href="#" className="text-slate-400 hover:text-indigo-400 transition-colors hover:scale-110 transform duration-200">
+                <a href="#" className={`${darkTheme.text.secondary} hover:text-indigo-400 transition-colors hover:scale-110 transform duration-200`}>
                   <Instagram size={20} />
                 </a>
-                <a href="#" className="text-slate-400 hover:text-indigo-400 transition-colors hover:scale-110 transform duration-200">
+                <a href="#" className={`${darkTheme.text.secondary} hover:text-indigo-400 transition-colors hover:scale-110 transform duration-200`}>
                   <Linkedin size={20} />
                 </a>
               </div>
@@ -672,7 +709,7 @@ const LandingPage = () => {
               <ul className="space-y-3">
                 {resources.map((resource, index) => (
                   <li key={index}>
-                    <a href={resource.href} className="text-slate-400 hover:text-indigo-400 transition-colors flex items-center gap-2 hover:translate-x-1 transform duration-200">
+                    <a href={resource.href} className={`${darkTheme.text.secondary} hover:text-indigo-400 transition-colors flex items-center gap-2 hover:translate-x-1 transform duration-200`}>
                       {resource.icon}
                       {resource.name}
                     </a>
@@ -687,7 +724,7 @@ const LandingPage = () => {
               <ul className="space-y-3">
                 {company.map((item, index) => (
                   <li key={index}>
-                    <a href={item.href} className="text-slate-400 hover:text-indigo-400 transition-colors flex items-center gap-2 hover:translate-x-1 transform duration-200">
+                    <a href={item.href} className={`${darkTheme.text.secondary} hover:text-indigo-400 transition-colors flex items-center gap-2 hover:translate-x-1 transform duration-200`}>
                       {item.icon}
                       {item.name}
                     </a>
@@ -700,15 +737,15 @@ const LandingPage = () => {
             <div>
               <h3 className="text-lg font-semibold mb-6">Contact Us</h3>
               <ul className="space-y-3">
-                <li className="flex items-center gap-3 text-slate-400 hover:text-indigo-400 transition-colors">
+                <li className={`flex items-center gap-3 ${darkTheme.text.secondary} hover:text-indigo-400 transition-colors`}>
                   <Mail size={18} />
                   <span>support@placementportal.com</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-400 hover:text-indigo-400 transition-colors">
+                <li className={`flex items-center gap-3 ${darkTheme.text.secondary} hover:text-indigo-400 transition-colors`}>
                   <Phone size={18} />
                   <span>+1 (555) 123-4567</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-400 hover:text-indigo-400 transition-colors">
+                <li className={`flex items-center gap-3 ${darkTheme.text.secondary} hover:text-indigo-400 transition-colors`}>
                   <MapPin size={18} />
                   <span>University Campus, Computer Science Department</span>
                 </li>
@@ -717,14 +754,14 @@ const LandingPage = () => {
           </div>
 
           {/* Bottom Footer */}
-          <div className="border-t border-slate-800/50 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-slate-500 text-sm flex items-center gap-1">
+          <div className={`border-t ${darkTheme.border.primary} mt-12 pt-8 flex flex-col md:flex-row justify-between items-center`}>
+            <p className={`${darkTheme.text.muted} text-sm flex items-center gap-1`}>
               © {new Date().getFullYear()} Placement Portal. Made with <Heart size={14} className="text-rose-500 inline" /> for students
             </p>
             <div className="flex gap-6 mt-4 md:mt-0">
-              <a href="#" className="text-slate-500 hover:text-indigo-400 text-sm transition-colors">Privacy Policy</a>
-              <a href="#" className="text-slate-500 hover:text-indigo-400 text-sm transition-colors">Terms of Service</a>
-              <a href="#" className="text-slate-500 hover:text-indigo-400 text-sm transition-colors">Cookie Policy</a>
+              <a href="#" className={`${darkTheme.text.muted} hover:text-indigo-400 text-sm transition-colors`}>Privacy Policy</a>
+              <a href="#" className={`${darkTheme.text.muted} hover:text-indigo-400 text-sm transition-colors`}>Terms of Service</a>
+              <a href="#" className={`${darkTheme.text.muted} hover:text-indigo-400 text-sm transition-colors`}>Cookie Policy</a>
             </div>
           </div>
         </div>

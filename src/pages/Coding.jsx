@@ -426,9 +426,9 @@ const CodingPage = () => {
 
           {/* Main Content - Code Editor */}
           <div className="lg:w-2/3">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
+            <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} overflow-hidden`}>
               {/* Tabs */}
-              <div className="border-b border-slate-200 dark:border-slate-700">
+              <div className={`border-b ${theme.border.primary}`}>
                 <nav className="flex overflow-x-auto">
                   {tabs.map((tab) => (
                     <button
@@ -471,10 +471,10 @@ const CodingPage = () => {
                   
                   <div className="relative">
                     <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
-                      <select 
+                      <select
                         value={selectedLanguage}
                         onChange={handleLanguageChange}
-                        className="px-2 py-1 rounded border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-800 dark:border-slate-600 text-sm"
+                        className={`px-2 py-1 rounded border ${theme.border.primary} focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${theme.bg.secondary} ${theme.text.primary} text-sm`}
                       >
                         {Object.keys(languageStarterCodes).sort().map((lang) => (
                           <option key={lang} value={lang}>{lang}</option>
@@ -485,7 +485,7 @@ const CodingPage = () => {
                     <textarea
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
-                      className="w-full h-96 p-4 font-mono text-sm focus:outline-none resize-none bg-slate-50 dark:bg-slate-900/50"
+                      className={`w-full h-96 p-4 font-mono text-sm focus:outline-none resize-none ${theme.bg.secondary} ${theme.text.primary}`}
                       spellCheck="false"
                     />
                   </div>
@@ -530,9 +530,9 @@ const CodingPage = () => {
                     </div>
                     
                     {output && (
-                      <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
-                        <h4 className="font-medium mb-2">Output</h4>
-                        <pre className="text-sm font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+                      <div className={`mt-4 p-4 ${theme.bg.secondary} rounded-lg`}>
+                        <h4 className={`font-medium mb-2 ${theme.text.primary}`}>Output</h4>
+                        <pre className={`text-sm font-mono ${theme.text.secondary} whitespace-pre-wrap`}>
                           {output}
                         </pre>
                       </div>
@@ -570,12 +570,12 @@ const CodingPage = () => {
                         <div className="mb-6">
                           <h3 className="font-semibold mb-2">Examples</h3>
                           {problem.examples.map((example, index) => (
-                            <div key={index} className="mb-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
-                              <p className="font-medium">Example {index + 1}:</p>
-                              <p className="mt-1"><strong>Input:</strong> {example.input}</p>
-                              <p><strong>Output:</strong> {example.output}</p>
+                            <div key={index} className={`mb-4 p-4 ${theme.bg.secondary} rounded-lg`}>
+                              <p className={`font-medium ${theme.text.primary}`}>Example {index + 1}:</p>
+                              <p className={`mt-1 ${theme.text.secondary}`}><strong>Input:</strong> {example.input}</p>
+                              <p className={`${theme.text.secondary}`}><strong>Output:</strong> {example.output}</p>
                               {example.explanation && (
-                                <p><strong>Explanation:</strong> {example.explanation}</p>
+                                <p className={`${theme.text.secondary}`}><strong>Explanation:</strong> {example.explanation}</p>
                               )}
                             </div>
                           ))}
@@ -592,7 +592,7 @@ const CodingPage = () => {
                         
                         <div className="flex flex-wrap gap-2 mb-6">
                           {problem.topics.map(topic => (
-                            <span key={topic} className="px-3 py-1 bg-slate-200 dark:bg-slate-700 text-sm rounded-full">
+                            <span key={topic} className={`px-3 py-1 ${theme.bg.accent} ${theme.text.secondary} text-sm rounded-full`}>
                               {topic}
                             </span>
                           ))}

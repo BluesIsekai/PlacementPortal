@@ -250,8 +250,8 @@ const PlacementPortalDashboard = () => {
     { icon: <LayoutDashboard size={18} />, label: "Dashboard", path: "/dashboard" },
     { icon: <Code2 size={18} />, label: "Coding", path: "/coding" },
     { icon: <Building2 size={18} />, label: "Companies", path: "/companies" },
-    { icon: <FileText size={18} />, label: "Documents", path: "/quizzes" },
-    { icon: <BarChart3 size={18} />, label: "Analytics", path: "/reports" },
+    { icon: <FileText size={18} />, label: "Practice Quizzes", path: "/quizzes" },
+    { icon: <BarChart3 size={18} />, label: "Report", path: "/reports" },
   ];
 
   // Reset loading state when location changes
@@ -309,7 +309,7 @@ const PlacementPortalDashboard = () => {
               <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-violet-600 ring-1 ring-white/10 grid place-content-center font-bold">
                 <div className="relative flex flex-col items-center justify-center">
                   <GraduationCap className="text-yellow-300" size={16} />
-                  <div className="text-white font-black text-sm" style={{ textShadow: '0 0 6px rgba(255,255,255,0.5)', fontFamily: 'monospace', lineHeight: '0.5', marginTop: '-1px', letterSpacing: '0.5px' }}>
+                  <div className={`${theme.isDark ? 'text-white' : 'text-slate-800'} font-black text-sm`} style={{ textShadow: theme.isDark ? '0 0 6px rgba(255,255,255,0.5)' : '0 0 6px rgba(0,0,0,0.3)', fontFamily: 'monospace', lineHeight: '0.5', marginTop: '-1px', letterSpacing: '0.5px' }}>
                     P<span className="text-yellow-300">P</span>
                   </div>
                 </div>
@@ -338,7 +338,7 @@ const PlacementPortalDashboard = () => {
               onClick={() => navigate("/notifications")}
             >
               <Bell size={18} />
-              <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-indigo-600 text-[10px] grid place-content-center">3</span>
+              <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-indigo-600 text-white text-[10px] grid place-content-center">3</span>
             </button>
 
             <div
@@ -510,7 +510,10 @@ const PlacementPortalDashboard = () => {
                   <div className={`p-2 ${theme.bg.tertiary} rounded-lg group-hover:bg-indigo-500/20 transition-colors`}>
                     {stat.icon}
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${stat.positive ? 'bg-green-900/30 text-green-400' : 'bg-rose-900/30 text-rose-400'}`}>
+                  <span className={`text-xs px-2 py-1 rounded-full ${stat.positive 
+                    ? (theme.isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-700') 
+                    : (theme.isDark ? 'bg-rose-900/30 text-rose-400' : 'bg-red-100 text-red-700')
+                  }`}>
                     {stat.change}
                   </span>
                 </div>
