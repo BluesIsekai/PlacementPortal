@@ -233,14 +233,8 @@ const SchedulePage = () => {
           </button>
         </div>
 
-        {/* Back to Dashboard Button */}
-        <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
-          >
-            Back to Dashboard
-          </button>
+        {/* Header */}
+        <div className="mb-6">
           <h1 className="text-2xl font-bold">Schedule</h1>
         </div>
 

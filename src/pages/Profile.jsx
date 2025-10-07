@@ -3,7 +3,7 @@ import {
   User, Mail, Phone, MapPin, GraduationCap, Calendar, 
   Edit3, Save, X, Briefcase, Code, Award, BookOpen,
   Linkedin, Github, ExternalLink, Download, Upload,
-  Star, ChevronDown, ChevronUp, Camera, ArrowLeft
+  Star, ChevronDown, ChevronUp, Camera
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
@@ -120,14 +120,8 @@ const Profile = () => {
   return (
     <div className={`min-h-screen ${theme.bg.primary} ${theme.text.primary} transition-colors duration-300 ease-in-out`}>
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Back Button */}
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className={`p-2 rounded-lg ${theme.button.secondary} ${theme.border.primary} transition-colors border`}
-          >
-            <ArrowLeft size={20} />
-          </button>
+        {/* Header */}
+        <div className="mb-6">
           <h1 className={`text-3xl font-bold ${theme.text.primary}`}>Profile</h1>
         </div>
 

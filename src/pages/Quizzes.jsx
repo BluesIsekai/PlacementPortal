@@ -3,12 +3,13 @@ import {
   Search, Filter, Clock, BarChart3, Award, 
   Play, CheckCircle, XCircle, AlertCircle,
   ChevronDown, ChevronUp, Star, TrendingUp,
-  BookOpen, Timer, HelpCircle, Target,
-  ArrowLeft
+  BookOpen, Timer, HelpCircle, Target
 } from "lucide-react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
+import { useNavigate } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 
 const Quizzes = () => {
+  const theme = useTheme();
   const [activeCategory, setActiveCategory] = useState("all");
   const [difficultyFilter, setDifficultyFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -408,10 +409,10 @@ const Quizzes = () => {
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
-      case "easy": return "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400";
-      case "medium": return "text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400";
-      case "hard": return "text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400";
-      default: return "text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-400";
+      case "easy": return "text-green-400 bg-green-500/20";
+      case "medium": return "text-yellow-400 bg-yellow-500/20";
+      case "hard": return "text-red-400 bg-red-500/20";
+      default: return `${theme.text.tertiary} ${theme.bg.accent}`;
     }
   };
 
@@ -427,21 +428,13 @@ const Quizzes = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+    <div className={`min-h-screen ${theme.bg.primary} ${theme.text.primary}`}>
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-4 mb-6">
-              <button
-                onClick={() => navigate("/dashboard")}
-                className="p-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
-              >
-                <ArrowLeft size={20} />
-              </button>
-              <h1 className="text-3xl font-bold">Practice Quizzes</h1>
-            </div>
-            <p className="text-slate-600 dark:text-slate-400 mt-2">
+            <h1 className={`text-3xl font-bold ${theme.text.primary} mb-6`}>Practice Quizzes</h1>
+            <p className={`${theme.text.secondary} mt-2`}>
               Prepare for your placements with curated quizzes
             </p>
           </div>
@@ -457,69 +450,69 @@ const Quizzes = () => {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4">
+          <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-4`}>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                <BookOpen size={20} className="text-blue-600 dark:text-blue-400" />
+              <div className={`p-2 ${theme.bg.accent} rounded-lg`}>
+                <BookOpen size={20} className="text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.totalQuizzes}</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Total Quizzes</p>
+                <p className={`text-2xl font-bold ${theme.text.primary}`}>{stats.totalQuizzes}</p>
+                <p className={`text-sm ${theme.text.tertiary}`}>Total Quizzes</p>
               </div>
             </div>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4">
+          <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-4`}>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <CheckCircle size={20} className="text-green-600 dark:text-green-400" />
+              <div className={`p-2 ${theme.bg.accent} rounded-lg`}>
+                <CheckCircle size={20} className="text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.completedQuizzes}</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Completed</p>
+                <p className={`text-2xl font-bold ${theme.text.primary}`}>{stats.completedQuizzes}</p>
+                <p className={`text-sm ${theme.text.tertiary}`}>Completed</p>
               </div>
             </div>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4">
+          <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-4`}>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                <Award size={20} className="text-amber-600 dark:text-amber-400" />
+              <div className={`p-2 ${theme.bg.accent} rounded-lg`}>
+                <Award size={20} className="text-amber-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.averageScore}%</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Average Score</p>
+                <p className={`text-2xl font-bold ${theme.text.primary}`}>{stats.averageScore}%</p>
+                <p className={`text-sm ${theme.text.tertiary}`}>Average Score</p>
               </div>
             </div>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4">
+          <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-4`}>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                <Clock size={20} className="text-purple-600 dark:text-purple-400" />
+              <div className={`p-2 ${theme.isDark ? 'bg-purple-900/30' : 'bg-purple-100'} rounded-lg`}>
+                <Clock size={20} className={`${theme.isDark ? 'text-purple-400' : 'text-purple-600'}`} />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.totalTimeSpent}</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Time Spent</p>
+                <p className={`text-sm ${theme.text.muted}`}>Time Spent</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 mb-6">
+        <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-4 mb-6`}>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={20} className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme.text.muted}`} />
               <input
                 type="text"
                 placeholder="Search quizzes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-800 dark:border-slate-600"
+                className={`w-full pl-10 pr-4 py-2.5 rounded-lg border ${theme.border.default} focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${theme.bg.input}`}
               />
             </div>
             
             <div className="flex flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                <Filter size={18} className="text-slate-500" />
+                <Filter size={18} className={`${theme.text.muted}`} />
                 <span className="text-sm font-medium">Filter:</span>
               </div>
               
@@ -532,7 +525,7 @@ const Quizzes = () => {
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       activeCategory === category.id
                         ? "bg-indigo-600 text-white"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                        : `${theme.bg.hover} ${theme.text.secondary} hover:${theme.bg.hover2}`
                     }`}
                   >
                     {category.label}
@@ -544,7 +537,7 @@ const Quizzes = () => {
               <select
                 value={difficultyFilter}
                 onChange={(e) => setDifficultyFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-800 dark:border-slate-600 text-sm"
+                className={`px-3 py-1.5 rounded-lg border ${theme.border.default} focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${theme.bg.input} text-sm`}
               >
                 {difficulties.map(difficulty => (
                   <option key={difficulty.id} value={difficulty.id}>{difficulty.label}</option>
@@ -557,11 +550,11 @@ const Quizzes = () => {
         {/* Quizzes Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredQuizzes.map(quiz => (
-            <div key={quiz.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
+            <div key={quiz.id} className={`${theme.bg.card} rounded-xl ${theme.shadow.card} overflow-hidden`}>
               <div className="p-5">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
+                    <div className={`p-2 ${theme.bg.hover} rounded-lg`}>
                       {getCategoryIcon(quiz.category)}
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(quiz.difficulty)}`}>
@@ -569,7 +562,7 @@ const Quizzes = () => {
                     </span>
                   </div>
                   {quiz.completed && (
-                    <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                    <div className={`flex items-center gap-1 ${theme.isDark ? 'text-green-400' : 'text-green-600'}`}>
                       <CheckCircle size={16} />
                       <span className="text-sm font-medium">Completed</span>
                     </div>
@@ -577,9 +570,9 @@ const Quizzes = () => {
                 </div>
                 
                 <h3 className="font-semibold text-lg mb-2">{quiz.title}</h3>
-                <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{quiz.description}</p>
+                <p className={`${theme.text.muted} text-sm mb-4`}>{quiz.description}</p>
                 
-                <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 mb-4">
+                <div className={`flex items-center gap-4 text-sm ${theme.text.muted} mb-4`}>
                   <div className="flex items-center gap-1">
                     <HelpCircle size={16} />
                     <span>{quiz.questions} questions</span>
@@ -591,21 +584,21 @@ const Quizzes = () => {
                 </div>
                 
                 {expandedQuiz === quiz.id && (
-                  <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
+                  <div className={`mt-4 p-4 ${theme.bg.accent} rounded-lg`}>
                     <h4 className="font-medium mb-2">Topics Covered:</h4>
                     <div className="flex flex-wrap gap-2">
                       {quiz.topics.map((topic, index) => (
-                        <span key={index} className="px-2 py-1 bg-slate-200 dark:bg-slate-700 text-xs rounded-full">
+                        <span key={index} className={`px-2 py-1 ${theme.bg.hover} text-xs rounded-full`}>
                           {topic}
                         </span>
                       ))}
                     </div>
                     
                     {quiz.completed && (
-                      <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                      <div className={`mt-4 pt-4 border-t ${theme.border.default}`}>
                         <h4 className="font-medium mb-2">Your Performance:</h4>
                         <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                          <div className={`flex items-center gap-1 ${theme.isDark ? 'text-green-400' : 'text-green-600'}`}>
                             <span className="font-semibold">{quiz.score}%</span>
                             <span>Score</span>
                           </div>
@@ -614,7 +607,7 @@ const Quizzes = () => {
                             <span>Attempts</span>
                           </div>
                           {quiz.bestScore && (
-                            <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                            <div className={`flex items-center gap-1 ${theme.isDark ? 'text-amber-400' : 'text-amber-600'}`}>
                               <Star size={14} className="fill-current" />
                               <span className="font-semibold">{quiz.bestScore}%</span>
                               <span>Best</span>

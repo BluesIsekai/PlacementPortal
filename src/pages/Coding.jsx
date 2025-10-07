@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { 
   Code2, Play, Save, RotateCcw, BookOpen, 
   Timer, ChevronDown, ChevronUp, Filter, 
   Search, Star, TrendingUp, BarChart3, 
   CheckCircle, XCircle, HelpCircle, Award,
-  Zap, Coffee, Clock, Terminal, ArrowLeft
+  Zap, Coffee, Clock, Terminal
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+
 
 const CodingPage = () => {
   const navigate = useNavigate();
@@ -18,7 +19,58 @@ const CodingPage = () => {
   const [expandedProblem, setExpandedProblem] = useState(null);
   const [code, setCode] = useState("// Write your code here\nfunction solveProblem(input) {\n  // Your solution\n  return input;\n}");
   const [isRunning, setIsRunning] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("JavaScript");
   const [output, setOutput] = useState("");
+  const [input, setInput] = useState("");
+
+  const Lang = {
+  "C": {
+    "name": "c",
+    "version": "10.2.0",
+    "filename": "my_cool_code.c"
+  },
+  "C#": {
+    "name": "csharp",
+    "version": "6.12.0",
+    "filename": "my_cool_code.cs"
+  },
+  "C++": {
+    "name": "c++",
+    "version": "10.2.0",
+    "filename": "my_cool_code.cpp"
+  },
+  "Go": {
+    "name": "go",
+    "version": "1.16.2",
+    "filename": "my_cool_code.go"
+  },
+  "Java": {
+    "name": "java",
+    "version": "15.0.2",
+    "filename": "my_cool_code.java"
+  },
+  "JavaScript": {
+    "name": "javascript",
+    "version": "18.15.0",
+    "filename": "my_cool_code.js"
+  },
+  "PHP": {
+    "name": "php",
+    "version": "8.2.3",
+    "filename": "my_cool_code.php"
+  },
+  "Python": {
+    "name": "python",
+    "version": "3.10.0",
+    "filename": "my_cool_code.py"
+  },
+  "Ruby": {
+    "name": "ruby",
+    "version": "3.0.1",
+    "filename": "my_cool_code.rb"
+  }
+};
+
 
   // Sample coding problems
   const problems = [
@@ -192,26 +244,61 @@ const CodingPage = () => {
     return true;
   });
 
-  const runCode = () => {
+  const runCode = async () => {
     setIsRunning(true);
-    // Simulate code execution
-    setTimeout(() => {
-      setOutput("Code executed successfully!\n\nTest Cases:\n✓ Test case 1 passed\n✓ Test case 2 passed\n✓ Test case 3 passed\n\nAll test cases passed!");
-      setIsRunning(false);
-    }, 2000);
+    const body=JSON.stringify({
+      language: Lang[selectedLanguage].name,
+      version: Lang[selectedLanguage].version,
+      files: [
+        {
+          name: Lang[selectedLanguage].filename,
+          content: `${code}`,
+        },
+      ],
+      stdin:input,
+      args: [],
+      compile_timeout: 10000,
+      run_timeout: 3000,
+      compile_memory_limit: -1,
+      run_memory_limit: -1,
+    })
+
+    console.log(input)
+    const res = await fetch("https://emkc.org/api/v2/piston/execute", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body:body,
+  });
+  const data = await res.json();
+  if(data.run.stdout){
+    setOutput(data.run.stdout);
+
+  }else if(data.run.stderr){
+    
+    setOutput(data.run.stderr);
+  }
+    setIsRunning(false);
+
+
+
   };
+
+
 
   const resetCode = () => {
     setCode("// Write your code here\nfunction solveProblem(input) {\n  // Your solution\n  return input;\n}");
     setOutput("");
   };
 
+
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
-      case "easy": return "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400";
-      case "medium": return "text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400";
-      case "hard": return "text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400";
-      default: return "text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-400";
+      case "easy": return "text-green-400 bg-green-500/20";
+      case "medium": return "text-yellow-400 bg-yellow-500/20";
+      case "hard": return "text-red-400 bg-red-500/20";
+      default: return `${theme.text.tertiary} ${theme.bg.accent}`;
     }
   };
 
@@ -227,7 +314,6 @@ const CodingPage = () => {
     Ruby: "# Write your Ruby code here\ndef solve_problem(input)\n  # Your solution\n  input\nend"
   };
 
-  const [selectedLanguage, setSelectedLanguage] = useState("JavaScript");
 
   const handleLanguageChange = (e) => {
     const newLanguage = e.target.value;
@@ -238,20 +324,12 @@ const CodingPage = () => {
   return (
     <div className={`min-h-screen ${theme.bg.primary} ${theme.text.primary}`}>
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Back Button and Heading */}
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className={`p-2 rounded-lg ${theme.bg.secondary} ${theme.bg.hover} transition-colors`}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className={`text-3xl font-bold ${theme.text.primary}`}>Coding Practice</h1>
-            <p className={`${theme.text.secondary} mt-2`}>
-              Sharpen your coding skills with curated problems
-            </p>
-          </div>
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className={`text-3xl font-bold ${theme.text.primary}`}>Coding Practice</h1>
+          <p className={`${theme.text.secondary} mt-2`}>
+            Sharpen your coding skills with curated problems
+          </p>
         </div>
 
         {/* Stats Overview */}
@@ -298,11 +376,11 @@ const CodingPage = () => {
           <div className="lg:w-1/3">
             <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-4 mb-6`}>
               <div className="flex items-center gap-2 mb-4">
-                <Search size={18} className="text-slate-500" />
+                <Search size={18} className={`${theme.text.tertiary}`} />
                 <input
                   type="text"
                   placeholder="Search problems..."
-                  className="flex-1 px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-800 dark:border-slate-600"
+                  className={`flex-1 px-3 py-2 rounded-lg border ${theme.border.primary} focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${theme.bg.tertiary} ${theme.text.primary}`}
                 />
               </div>
               
@@ -310,7 +388,7 @@ const CodingPage = () => {
                 <select
                   value={selectedDifficulty}
                   onChange={(e) => setSelectedDifficulty(e.target.value)}
-                  className="px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-800 dark:border-slate-600 text-sm"
+                  className={`px-3 py-2 rounded-lg border ${theme.border.primary} focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${theme.bg.tertiary} ${theme.text.primary} text-sm`}
                 >
                   {difficulties.map(difficulty => (
                     <option key={difficulty.id} value={difficulty.id}>{difficulty.label}</option>
@@ -320,7 +398,7 @@ const CodingPage = () => {
                 <select
                   value={selectedTopic}
                   onChange={(e) => setSelectedTopic(e.target.value)}
-                  className="px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-800 dark:border-slate-600 text-sm"
+                  className={`px-3 py-2 rounded-lg border ${theme.border.primary} focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${theme.bg.tertiary} ${theme.text.primary} text-sm`}
                 >
                   {topics.map(topic => (
                     <option key={topic.id} value={topic.id}>{topic.label}</option>
@@ -334,33 +412,33 @@ const CodingPage = () => {
                     key={problem.id} 
                     className={`p-4 border rounded-lg cursor-pointer transition-colors ${
                       expandedProblem === problem.id 
-                        ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20" 
-                        : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+                        ? `border-indigo-500 ${theme.bg.accent}` 
+                        : `${theme.border.primary} ${theme.bg.cardHover}`
                     }`}
                     onClick={() => setExpandedProblem(expandedProblem === problem.id ? null : problem.id)}
                   >
                     <div className="flex justify-between items-start">
-                      <h3 className="font-medium">{problem.title}</h3>
+                      <h3 className={`font-medium ${theme.text.primary}`}>{problem.title}</h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(problem.difficulty)}`}>
                         {problem.difficulty}
                       </span>
                     </div>
                     
                     <div className="flex justify-between items-center mt-2">
-                      <div className="text-sm text-slate-600 dark:text-slate-400">
+                      <div className={`text-sm ${theme.text.tertiary}`}>
                         Acceptance: {problem.acceptance}
                       </div>
-                      <div className="flex items-center gap-1 text-slate-500">
+                      <div className={`flex items-center gap-1 ${theme.text.muted}`}>
                         {expandedProblem === problem.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </div>
                     </div>
                     
                     {expandedProblem === problem.id && (
-                      <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
-                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{problem.description}</p>
+                      <div className={`mt-3 pt-3 border-t ${theme.border.default}`}>
+                        <p className={`text-sm ${theme.text.muted} mb-2`}>{problem.description}</p>
                         <div className="flex flex-wrap gap-2">
                           {problem.topics.map(topic => (
-                            <span key={topic} className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-xs rounded-full">
+                            <span key={topic} className={`px-2 py-1 ${theme.bg.hover} text-xs rounded-full`}>
                               {topic}
                             </span>
                           ))}
@@ -373,7 +451,7 @@ const CodingPage = () => {
             </div>
             
             {/* Progress Tracking */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-5">
+            <div className={`${theme.bg.card} rounded-xl ${theme.shadow.card} p-5`}>
               <h2 className="font-semibold mb-4">Your Progress</h2>
               
               <div className="space-y-4">
@@ -382,7 +460,7 @@ const CodingPage = () => {
                     <span>Easy</span>
                     <span>{userStats.easySolved}/25</span>
                   </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                  <div className={`w-full ${theme.bg.muted} rounded-full h-2`}>
                     <div 
                       className="bg-green-600 h-2 rounded-full" 
                       style={{ width: `${(userStats.easySolved / 25) * 100}%` }}
@@ -395,7 +473,7 @@ const CodingPage = () => {
                     <span>Medium</span>
                     <span>{userStats.mediumSolved}/40</span>
                   </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                  <div className={`w-full ${theme.bg.muted} rounded-full h-2`}>
                     <div 
                       className="bg-yellow-600 h-2 rounded-full" 
                       style={{ width: `${(userStats.mediumSolved / 40) * 100}%` }}
@@ -408,7 +486,7 @@ const CodingPage = () => {
                     <span>Hard</span>
                     <span>{userStats.hardSolved}/15</span>
                   </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                  <div className={`w-full ${theme.bg.muted} rounded-full h-2`}>
                     <div 
                       className="bg-red-600 h-2 rounded-full" 
                       style={{ width: `${(userStats.hardSolved / 15) * 100}%` }}
@@ -417,10 +495,10 @@ const CodingPage = () => {
                 </div>
               </div>
               
-              <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div className={`mt-6 pt-4 border-t ${theme.border.default}`}>
                 <h3 className="font-medium mb-2">Daily Goal</h3>
                 <div className="flex items-center gap-3">
-                  <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                  <div className={`flex-1 ${theme.bg.muted} rounded-full h-2`}>
                     <div 
                       className="bg-indigo-600 h-2 rounded-full" 
                       style={{ width: "60%" }}
@@ -489,13 +567,16 @@ const CodingPage = () => {
                         ))}
                       </select>
                     </div>
-                    
                     <textarea
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
                       className="w-full h-96 p-4 font-mono text-sm focus:outline-none resize-none bg-slate-50 dark:bg-slate-900/50"
                       spellCheck="false"
                     />
+                    <div className="bg-slate-100 m-5 rounded-sm dark:bg-slate-900/50">
+                    <h1 className="font-medium p-2 mx-5 rounded">Input</h1>
+                    <textarea type="text" value={input} onChange={(e)=>{setInput(e.target.value)}} className="w-full h-48 p-4 font-mono text-sm focus:outline-none resize-none "/>
+                    </div>
                   </div>
                   
                   <div className="p-4 border-t border-slate-200 dark:border-slate-700">
