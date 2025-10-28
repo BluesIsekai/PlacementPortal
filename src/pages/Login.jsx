@@ -4,6 +4,7 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  sendPasswordResetEmail,
 } from 'firebase/auth'
 import { auth, isFirebaseConfigured } from '../lib/firebase'
 import {
@@ -44,6 +45,8 @@ const themes = {
       'bg-red-50 border border-red-200 text-red-800 rounded-xl p-3 text-sm',
     warning:
       'bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3 text-sm',
+    success:
+      'bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl p-3 text-sm',
   },
   dark: {
     root: 'min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black',
@@ -70,6 +73,8 @@ const themes = {
       'bg-red-900/50 border border-red-700 text-red-300 rounded-xl p-3 text-sm',
     warning:
       'bg-amber-900/50 border border-amber-700 text-amber-300 rounded-xl p-3 text-sm',
+    success:
+      'bg-emerald-900/40 border border-emerald-700 text-emerald-200 rounded-xl p-3 text-sm',
   },
   gradient: {
     root: 'min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600',
@@ -96,6 +101,8 @@ const themes = {
       'bg-red-500/20 border border-red-400/30 text-red-100 rounded-xl p-3 text-sm backdrop-blur-sm',
     warning:
       'bg-amber-500/20 border border-amber-400/30 text-amber-100 rounded-xl p-3 text-sm backdrop-blur-sm',
+    success:
+      'bg-emerald-500/20 border border-emerald-400/30 text-emerald-100 rounded-xl p-3 text-sm backdrop-blur-sm',
   },
 }
 
@@ -106,6 +113,8 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [resetting, setResetting] = useState(false)
 
   // Theme state - stored in localStorage for persistence
   const [currentTheme, setCurrentTheme] = useState(() => {
@@ -129,6 +138,7 @@ export default function Login() {
   const onSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setSuccess('')
     setLoading(true)
     try {
       await signInWithEmailAndPassword(auth, email, password)
@@ -143,6 +153,7 @@ export default function Login() {
 
   const onGoogle = async () => {
     setError('')
+    setSuccess('')
     setLoading(true)
     try {
       const provider = new GoogleAuthProvider()
@@ -152,6 +163,31 @@ export default function Login() {
       setError(err?.message || 'Google sign-in failed')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handlePasswordReset = async () => {
+    setError('')
+    setSuccess('')
+
+    if (!isFirebaseConfigured || !auth) {
+      setError('Password reset is unavailable while Firebase is not configured.')
+      return
+    }
+
+    if (!email) {
+      setError('Enter your email address before requesting a password reset.')
+      return
+    }
+
+    setResetting(true)
+    try {
+      await sendPasswordResetEmail(auth, email)
+      setSuccess('Password reset email sent. Check your inbox for further instructions.')
+    } catch (err) {
+      setError(err?.message || 'Unable to send password reset email right now.')
+    } finally {
+      setResetting(false)
     }
   }
 
@@ -276,6 +312,25 @@ export default function Login() {
                   />
                 </svg>
                 <span>{error}</span>
+              </div>
+            </div>
+          )}
+
+          {success && (
+            <div className={styles.success}>
+              <div className="flex items-center space-x-2">
+                <svg
+                  className="h-4 w-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0l-3-3a1 1 0 011.414-1.414l2.293 2.293 6.543-6.543a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span>{success}</span>
               </div>
             </div>
           )}
@@ -408,9 +463,11 @@ export default function Login() {
           <div className="mt-6 flex items-center justify-between text-sm">
             <button
               type="button"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
+              onClick={handlePasswordReset}
+              disabled={resetting}
+              className="font-medium text-indigo-600 hover:text-indigo-500 disabled:opacity-50"
             >
-              Forgot password?
+              {resetting ? 'Sending reset link...' : 'Forgot password?'}
             </button>
             <button
               type="button"
