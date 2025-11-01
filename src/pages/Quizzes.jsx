@@ -1,12 +1,87 @@
 import React, { useState } from "react";
-import { 
-  Search, Filter, Clock, BarChart3, Award, 
-  Play, CheckCircle, XCircle, AlertCircle,
-  ChevronDown, ChevronUp, Star, TrendingUp,
-  BookOpen, Timer, HelpCircle, Target
+import {
+  Search,
+  Filter,
+  Clock,
+  BarChart3,
+  Award,
+  Sparkles,
+  Play,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Star,
+  TrendingUp,
+  BookOpen,
+  Timer,
+  HelpCircle,
+  Target,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+import { questionBank } from "../data/quizQuestions";
+
+const QUICK_QUESTION_STORAGE_KEY = "placement-portal::quick-question-pool";
+
+const getRandomSubset = (pool, count) => {
+  const available = [...pool];
+  const selection = [];
+  const take = Math.min(count, available.length);
+
+  for (let i = 0; i < take; i += 1) {
+    const index = Math.floor(Math.random() * available.length);
+    selection.push(available.splice(index, 1)[0]);
+  }
+
+  return selection;
+};
+
+const selectQuickQuestions = () => {
+  const fallback = getRandomSubset(questionBank, 5);
+
+  if (typeof window === "undefined") {
+    return fallback;
+  }
+
+  try {
+    const stored = window.sessionStorage.getItem(QUICK_QUESTION_STORAGE_KEY);
+    const validIds = new Set(questionBank.map((question) => question.id));
+    let remainingIds = [];
+
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        remainingIds = parsed.filter((id) => validIds.has(id));
+      }
+    }
+
+    if (remainingIds.length < 5) {
+      remainingIds = questionBank.map((question) => question.id);
+    }
+
+    const pickedIds = getRandomSubset(remainingIds, 5);
+    const leftoverIds = remainingIds.filter((id) => !pickedIds.includes(id));
+
+    window.sessionStorage.setItem(
+      QUICK_QUESTION_STORAGE_KEY,
+      JSON.stringify(leftoverIds)
+    );
+
+    return pickedIds
+      .map((id) => questionBank.find((question) => question.id === id))
+      .filter(Boolean);
+  } catch (error) {
+    console.error("Unable to select quick questions", error);
+    return fallback;
+  }
+};
+
+const formatDifficultyLabel = (value) =>
+  value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
 
 const Quizzes = () => {
   const theme = useTheme();
@@ -14,6 +89,8 @@ const Quizzes = () => {
   const [difficultyFilter, setDifficultyFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedQuiz, setExpandedQuiz] = useState(null);
+  const [quickQuestions] = useState(() => selectQuickQuestions());
+  const [revealedAnswers, setRevealedAnswers] = useState({});
   const navigate = useNavigate(); // Initialize navigate
 
   // Sample quiz data
@@ -370,6 +447,13 @@ const Quizzes = () => {
     }
   ];
 
+  const toggleAnswerVisibility = (questionId) => {
+    setRevealedAnswers((prev) => ({
+      ...prev,
+      [questionId]: !prev[questionId],
+    }));
+  };
+
   const categories = [
     { id: "all", label: "All Quizzes" },
     { id: "aptitude", label: "Aptitude" },
@@ -447,6 +531,136 @@ const Quizzes = () => {
             View Progress Report
           </button>
         </div>
+
+        {quickQuestions.length > 0 && (
+          <div className={`${theme.bg.card} ${theme.shadow.card} rounded-xl p-6 mb-8`}>
+            <div className="flex flex-col gap-4 border-b border-dashed pb-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-3">
+                <div
+                  className={`rounded-lg p-2 ${
+                    theme.isDark ? "bg-indigo-500/20" : "bg-indigo-100"
+                  }`}
+                >
+                  <Sparkles size={20} className="text-indigo-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold">Quick Practice Deck</h2>
+                  <p className={`text-sm ${theme.text.muted}`}>
+                    Five random questions from our 50-question bank appear once
+                    per session. Refresh after completing all to see a new set.
+                  </p>
+                </div>
+              </div>
+              <div className={`flex items-center gap-2 text-sm ${theme.text.muted}`}>
+                <Timer size={16} />
+                <span>Approx. 5 minutes</span>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              {quickQuestions.map((question, index) => {
+                const isRevealed = Boolean(revealedAnswers[question.id]);
+                const answerIndex = question.options.findIndex(
+                  (option) => option === question.answer
+                );
+                const answerLabel =
+                  answerIndex >= 0 ? String.fromCharCode(65 + answerIndex) : "";
+
+                return (
+                  <div
+                    key={question.id}
+                    className={`rounded-xl border ${theme.border.primary} p-4 ${
+                      theme.isDark ? "bg-slate-900/40" : "bg-white"
+                    }`}
+                  >
+                    <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <p
+                          className={`text-xs font-semibold uppercase tracking-wide ${theme.text.accent}`}
+                        >
+                          {question.category}
+                        </p>
+                        <p className="mt-1 font-semibold leading-snug">
+                          {`Q${index + 1}. ${question.question}`}
+                        </p>
+                      </div>
+                      <span
+                        className={`self-start rounded-full px-3 py-1 text-xs font-semibold ${getDifficultyColor(
+                          question.difficulty
+                        )}`}
+                      >
+                        {formatDifficultyLabel(question.difficulty)}
+                      </span>
+                    </div>
+
+                    <ul className="mt-3 space-y-2">
+                      {question.options.map((option, optionIndex) => {
+                        const isCorrect =
+                          isRevealed && option === question.answer;
+                        return (
+                          <li
+                            key={optionIndex}
+                            className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-sm ${
+                              isCorrect
+                                ? "border-indigo-500 bg-indigo-500/10 font-medium"
+                                : `${theme.border.primary} ${
+                                    theme.isDark
+                                      ? "bg-slate-900/60"
+                                      : "bg-slate-50"
+                                  }`
+                            }`}
+                          >
+                            <span className="font-semibold">
+                              {String.fromCharCode(65 + optionIndex)}.
+                            </span>
+                            <span>{option}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+
+                    <button
+                      type="button"
+                      onClick={() => toggleAnswerVisibility(question.id)}
+                      className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-500"
+                    >
+                      {isRevealed ? <EyeOff size={16} /> : <Eye size={16} />}
+                      {isRevealed ? "Hide answer" : "Show answer"}
+                    </button>
+
+                    {isRevealed && (
+                      <div
+                        className={`mt-3 rounded-lg border-l-4 border-indigo-500 px-3 py-2 text-sm ${
+                          theme.isDark ? "bg-slate-900/50" : "bg-indigo-50"
+                        }`}
+                      >
+                        <p className="font-semibold">
+                          Correct: {answerLabel ? `${answerLabel}. ` : ""}
+                          {question.answer}
+                        </p>
+                        {question.explanation && (
+                          <p className={`mt-1 ${theme.text.muted}`}>
+                            {question.explanation}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div
+              className={`mt-5 flex items-center gap-2 text-xs ${theme.text.muted}`}
+            >
+              <AlertCircle size={14} />
+              <span>
+                The rotation avoids repeats until the entire 50-question bank is
+                exhausted.
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Stats Overview */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
