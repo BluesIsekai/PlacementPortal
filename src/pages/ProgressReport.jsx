@@ -1,117 +1,248 @@
-import React, { useState } from "react";
-import { 
-  BarChart3, Download, Calendar, 
-  Target, TrendingUp, Award, Clock, 
-  CheckCircle, XCircle, HelpCircle, Filter,
-  Star, ChevronDown, ChevronUp, BookOpen
+import React, { useMemo, useState } from "react";
+import {
+  Download,
+  Calendar,
+  Target,
+  TrendingUp,
+  Award,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Star,
+  ChevronDown,
+  ChevronUp,
+  BookOpen,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
+import { useQuiz } from "../context/QuizContext";
+
+const CATEGORY_TEMPLATES = [
+  {
+    key: "aptitude",
+    label: "Aptitude",
+    defaults: {
+      attempts: 6,
+      averageScore: 82,
+      bestScore: 95,
+      improvement: 15,
+      topics: [
+        { name: "Percentages", score: 85, attempts: 3 },
+        { name: "Ratios", score: 90, attempts: 2 },
+        { name: "Time & Work", score: 78, attempts: 4 },
+        { name: "Profit & Loss", score: 75, attempts: 3 },
+      ],
+    },
+  },
+  {
+    key: "verbal",
+    label: "Verbal",
+    defaults: {
+      attempts: 4,
+      averageScore: 68,
+      bestScore: 80,
+      improvement: 5,
+      topics: [
+        { name: "Grammar", score: 72, attempts: 2 },
+        { name: "Vocabulary", score: 65, attempts: 3 },
+        { name: "Reading Comprehension", score: 70, attempts: 2 },
+      ],
+    },
+  },
+  {
+    key: "reasoning",
+    label: "Reasoning",
+    defaults: {
+      attempts: 5,
+      averageScore: 80,
+      bestScore: 92,
+      improvement: 10,
+      topics: [
+        { name: "Puzzles", score: 85, attempts: 3 },
+        { name: "Series", score: 78, attempts: 2 },
+        { name: "Pattern Recognition", score: 82, attempts: 4 },
+      ],
+    },
+  },
+  {
+    key: "technical",
+    label: "Technical",
+    defaults: {
+      attempts: 3,
+      averageScore: 74,
+      bestScore: 88,
+      improvement: 8,
+      topics: [
+        { name: "DSA", score: 70, attempts: 2 },
+        { name: "DBMS", score: 80, attempts: 3 },
+        { name: "OS", score: 72, attempts: 2 },
+      ],
+    },
+  },
+]
+
+const CATEGORY_LABELS = CATEGORY_TEMPLATES.reduce(
+  (acc, item) => ({ ...acc, [item.key]: item.label }),
+  {},
+)
+
+const DEFAULT_OVERALL = {
+  quizzesAttempted: 0,
+  averageScore: 0,
+  totalTimeSpent: "0m",
+  improvement: 0,
+  bestCategory: "—",
+  weakestCategory: "—",
+}
+
+const DEFAULT_RECENT_ATTEMPTS = []
+
+const DEFAULT_GOALS = {
+  targetScore: 85,
+  quizzesPerWeek: 5,
+  currentWeekQuizzes: 0,
+  weeklyTargetMet: false,
+}
+
+const capitalize = (value = "") =>
+  value ? value.charAt(0).toUpperCase() + value.slice(1) : ""
+
+const formatDuration = (totalMinutes = 0) => {
+  if (!totalMinutes) return "0m"
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = Math.max(0, Math.round(totalMinutes % 60))
+  if (!hours) return `${minutes}m`
+  if (!minutes) return `${hours}h`
+  return `${hours}h ${minutes}m`
+}
+
+const formatAttemptTimestamp = (timestamp) => {
+  if (!timestamp) return ""
+  try {
+    const date = new Date(timestamp)
+    const dateFormatter = new Intl.DateTimeFormat("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    })
+    return dateFormatter.format(date)
+  } catch (error) {
+    return ""
+  }
+}
 
 const ProgressReport = () => {
   const [timeRange, setTimeRange] = useState("month");
   const [expandedCategory, setExpandedCategory] = useState(null);
-  const navigate = useNavigate(); // Initialize navigate
+  const { totals, accuracy, categoryBreakdown, history } = useQuiz();
 
-  // Sample progress data
-  const progressData = {
-    overall: {
-      quizzesAttempted: 18,
-      averageScore: 76,
-      totalTimeSpent: "15h 30m",
-      improvement: 12, // percentage improvement
-      bestCategory: "Aptitude",
-      weakestCategory: "Verbal"
-    },
-    categoryPerformance: [
-      {
-        category: "Aptitude",
-        attempts: 6,
-        averageScore: 82,
-        bestScore: 95,
-        improvement: 15,
-        topics: [
-          { name: "Percentages", score: 85, attempts: 3 },
-          { name: "Ratios", score: 90, attempts: 2 },
-          { name: "Time & Work", score: 78, attempts: 4 },
-          { name: "Profit & Loss", score: 75, attempts: 3 }
-        ]
-      },
-      {
-        category: "Verbal",
-        attempts: 4,
-        averageScore: 68,
-        bestScore: 80,
-        improvement: 5,
-        topics: [
-          { name: "Grammar", score: 72, attempts: 2 },
-          { name: "Vocabulary", score: 65, attempts: 3 },
-          { name: "Reading Comprehension", score: 70, attempts: 2 }
-        ]
-      },
-      {
-        category: "Reasoning",
-        attempts: 5,
-        averageScore: 80,
-        bestScore: 92,
-        improvement: 10,
-        topics: [
-          { name: "Puzzles", score: 85, attempts: 3 },
-          { name: "Series", score: 78, attempts: 2 },
-          { name: "Pattern Recognition", score: 82, attempts: 4 }
-        ]
-      },
-      {
-        category: "Technical",
-        attempts: 3,
-        averageScore: 74,
-        bestScore: 88,
-        improvement: 8,
-        topics: [
-          { name: "DSA", score: 70, attempts: 2 },
-          { name: "DBMS", score: 80, attempts: 3 },
-          { name: "OS", score: 72, attempts: 2 }
-        ]
-      }
-    ],
-    recentAttempts: [
-      {
-        id: 1,
-        name: "Aptitude Test: Quantitative Ability",
-        date: "Today, 10:30 AM",
-        score: 85,
-        timeSpent: "25m",
-        correct: 17,
-        incorrect: 3,
-        skipped: 0
-      },
-      {
-        id: 2,
-        name: "Verbal Ability Practice",
-        date: "Yesterday, 4:15 PM",
-        score: 72,
-        timeSpent: "18m",
-        correct: 11,
-        incorrect: 4,
-        skipped: 0
-      },
-      {
-        id: 3,
-        name: "Logical Reasoning Challenge",
-        date: "2 days ago, 11:20 AM",
-        score: 88,
-        timeSpent: "35m",
-        correct: 22,
-        incorrect: 3,
-        skipped: 0
-      }
-    ],
-    goals: {
-      targetScore: 85,
-      quizzesPerWeek: 5,
-      currentWeekQuizzes: 3,
-      weeklyTargetMet: false
+  const progressData = useMemo(() => {
+    const totalAttempts = totals.attempts;
+    if (!totalAttempts) {
+      return {
+        overall: DEFAULT_OVERALL,
+        categoryPerformance: CATEGORY_TEMPLATES.map((item) => ({
+          category: item.label,
+          attempts: 0,
+          averageScore: 0,
+          bestScore: 0,
+          improvement: 0,
+          topics: item.defaults.topics,
+        })),
+        recentAttempts: DEFAULT_RECENT_ATTEMPTS,
+        goals: DEFAULT_GOALS,
+      };
     }
-  };
+
+    const formattedTime = formatDuration(totals.timeSpentMinutes);
+    const validCategories = categoryBreakdown.filter((entry) => entry.attempts > 0);
+
+    const bestCategoryEntry = validCategories.reduce(
+      (best, entry) => (!best || entry.averageScore > best.averageScore ? entry : best),
+      null
+    );
+    const weakestCategoryEntry = validCategories.reduce(
+      (worst, entry) => (!worst || entry.averageScore < worst.averageScore ? entry : worst),
+      null
+    );
+
+    const bestCategoryLabel = bestCategoryEntry
+      ? CATEGORY_LABELS[bestCategoryEntry.category] || capitalize(bestCategoryEntry.category)
+      : DEFAULT_OVERALL.bestCategory;
+
+    const weakestCategoryLabel = weakestCategoryEntry
+      ? CATEGORY_LABELS[weakestCategoryEntry.category] || capitalize(weakestCategoryEntry.category)
+      : DEFAULT_OVERALL.weakestCategory;
+
+    const categoryPerformance = CATEGORY_TEMPLATES.map((template) => {
+      const stats = categoryBreakdown.find(
+        (entry) => entry.category === template.key && entry.attempts > 0
+      );
+      if (!stats) {
+        return { category: template.label, ...template.defaults };
+      }
+
+      const averageScore = stats.averageScore;
+
+      return {
+        category: template.label,
+        attempts: stats.attempts,
+        averageScore,
+        bestScore: Math.max(averageScore, template.defaults.bestScore || averageScore),
+        improvement: Math.max(0, averageScore - 70),
+        topics: template.defaults.topics.map((topic) => ({
+          ...topic,
+          score: averageScore,
+          attempts: stats.attempts,
+        })),
+      };
+    });
+
+    const unmatchedCategories = validCategories.filter(
+      (entry) => !CATEGORY_TEMPLATES.some((template) => template.key === entry.category)
+    );
+
+    const extraCategories = unmatchedCategories.map((entry) => ({
+      category: capitalize(entry.category),
+      attempts: entry.attempts,
+      averageScore: entry.averageScore,
+      bestScore: entry.averageScore,
+      improvement: Math.max(0, entry.averageScore - 70),
+      topics: [
+        {
+          name: "Keep practicing",
+          score: entry.averageScore,
+          attempts: entry.attempts,
+        },
+      ],
+    }));
+
+    const recentAttempts = history.slice(0, 3).map((attempt) => ({
+      id: attempt.id,
+      name: attempt.prompt || "Practice Question",
+      date: formatAttemptTimestamp(attempt.timestamp),
+      score: attempt.correct ? 100 : 0,
+      timeSpent: `${attempt.timeTaken || 1}m`,
+      correct: attempt.correct ? 1 : 0,
+      incorrect: attempt.correct ? 0 : 1,
+      skipped: 0,
+    }));
+
+    return {
+      overall: {
+        quizzesAttempted: totalAttempts,
+        averageScore: accuracy,
+        totalTimeSpent: formattedTime,
+        improvement: Math.max(0, accuracy - 70),
+        bestCategory: bestCategoryLabel,
+        weakestCategory: weakestCategoryLabel,
+      },
+      categoryPerformance: [...categoryPerformance, ...extraCategories],
+      recentAttempts: recentAttempts.length ? recentAttempts : DEFAULT_RECENT_ATTEMPTS,
+      goals: {
+        ...DEFAULT_GOALS,
+        currentWeekQuizzes: totalAttempts,
+        weeklyTargetMet: totalAttempts >= DEFAULT_GOALS.quizzesPerWeek,
+      },
+    };
+  }, [accuracy, categoryBreakdown, history, totals]);
 
   const timeRanges = [
     { id: "week", label: "Last Week" },
@@ -292,31 +423,39 @@ const ProgressReport = () => {
                 
                 {expandedCategory === index && (
                   <div className="mt-4 pl-11">
-                    <h4 className="font-medium mb-3">Topic-wise Performance</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {category.topics.map((topic, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
-                          <span className="text-sm font-medium">{topic.name}</span>
-                          <div className="text-right">
-                            <p className={`text-sm font-semibold ${getScoreColor(topic.score)}`}>
-                              {topic.score}%
-                            </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                              {topic.attempts} attempt{topic.attempts !== 1 ? 's' : ''}
-                            </p>
+                    {category.attempts === 0 ? (
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                        You haven&apos;t attempted any quizzes in this category yet. Start a quiz to see detailed topic performance.
+                      </p>
+                    ) : (
+                      <>
+                        <h4 className="font-medium mb-3">Topic-wise Performance</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {category.topics.map((topic, i) => (
+                            <div key={i} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
+                              <span className="text-sm font-medium">{topic.name}</span>
+                              <div className="text-right">
+                                <p className={`text-sm font-semibold ${getScoreColor(topic.score)}`}>
+                                  {topic.score}%
+                                </p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                  {topic.attempts} attempt{topic.attempts !== 1 ? 's' : ''}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                          <div className="flex items-center gap-2">
+                            <TrendingUp size={16} className={getImprovementColor(category.improvement)} />
+                            <span className={`text-sm ${getImprovementColor(category.improvement)}`}>
+                              +{category.improvement}% improvement over time
+                            </span>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                    
-                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                      <div className="flex items-center gap-2">
-                        <TrendingUp size={16} className={getImprovementColor(category.improvement)} />
-                        <span className={`text-sm ${getImprovementColor(category.improvement)}`}>
-                          +{category.improvement}% improvement over time
-                        </span>
-                      </div>
-                    </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -328,53 +467,62 @@ const ProgressReport = () => {
           {/* Recent Attempts */}
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6">
             <h2 className="text-xl font-semibold mb-6">Recent Quiz Attempts</h2>
-            
-            <div className="space-y-4">
-              {progressData.recentAttempts.map(attempt => (
-                <div key={attempt.id} className="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-medium">{attempt.name}</h3>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">{attempt.date}</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="text-center">
-                        <p className={`text-lg font-bold ${getScoreColor(attempt.score)}`}>
-                          {attempt.score}%
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Score</p>
+
+            {progressData.recentAttempts.length ? (
+              <div className="space-y-4">
+                {progressData.recentAttempts.map((attempt) => (
+                  <div key={attempt.id} className="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="font-medium">{attempt.name}</h3>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{attempt.date}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="text-center">
+                          <p className={`text-lg font-bold ${getScoreColor(attempt.score)}`}>
+                            {attempt.score}%
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Score</p>
+                        </div>
+
+                        <div className="text-center">
+                          <p className="text-lg font-bold">{attempt.timeSpent}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Time</p>
+                        </div>
                       </div>
-                      
-                      <div className="text-center">
-                        <p className="text-lg font-bold">{attempt.timeSpent}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Time</p>
+
+                      <div className="flex items-center gap-4">
+                        <div className="text-center">
+                          <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                            <CheckCircle size={16} />
+                            <span className="font-semibold">{attempt.correct}</span>
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Correct</p>
+                        </div>
+
+                        <div className="text-center">
+                          <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                            <XCircle size={16} />
+                            <span className="font-semibold">{attempt.incorrect}</span>
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Incorrect</p>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-4">
-                      <div className="text-center">
-                        <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                          <CheckCircle size={16} />
-                          <span className="font-semibold">{attempt.correct}</span>
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Correct</p>
-                      </div>
-                      
-                      <div className="text-center">
-                        <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
-                          <XCircle size={16} />
-                          <span className="font-semibold">{attempt.incorrect}</span>
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Incorrect</p>
-                      </div>
-                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-            
-            <button className="w-full mt-6 py-2.5 text-indigo-600 dark:text-indigo-400 font-medium rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-slate-300 dark:border-slate-700/70 bg-slate-50 dark:bg-slate-800/40 p-6 text-center text-sm text-slate-600 dark:text-slate-400">
+                No quiz attempts logged yet. Complete a quiz to see your progress here.
+              </div>
+            )}
+
+            <button
+              className="w-full mt-6 py-2.5 text-indigo-600 dark:text-indigo-400 font-medium rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!progressData.recentAttempts.length}
+            >
               View All Attempts
             </button>
           </div>

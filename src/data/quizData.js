@@ -1,38 +1,27 @@
-export const stats = {
-  totalQuizzes: 25,
-  completedQuizzes: 12,
-  averageScore: 78,
-  totalTimeSpent: "15h 30m",
-};
+import { quizCatalog } from './quizzes'
 
-export const quizzes = [
-  {
-    id: 1,
-    title: "Aptitude Test: Quantitative Ability",
-    description: "Test your quantitative skills with these challenging problems",
-    category: "aptitude",
-    difficulty: "medium",
-    questions: 20,
-    time: 30,
-    completed: true,
-    score: 85,
-    attempts: 3,
-    bestScore: 92,
-    topics: ["Percentages", "Ratios", "Time & Work", "Profit & Loss"],
-  },
-  {
-    id: 2,
-    title: "Verbal Ability Practice",
-    description: "Improve your English grammar and vocabulary",
-    category: "verbal",
-    difficulty: "easy",
-    questions: 15,
-    time: 20,
-    completed: true,
-    score: 78,
-    attempts: 2,
-    bestScore: 78,
-    topics: ["Grammar", "Vocabulary", "Reading Comprehension"],
-  },
-  // ... Add more quizzes as needed
-];
+const calculateAverageScore = (quizzes) => {
+  const scored = quizzes.filter((quiz) => typeof quiz.score === 'number')
+  if (!scored.length) return 0
+  const total = scored.reduce((sum, quiz) => sum + quiz.score, 0)
+  return Math.round(total / scored.length)
+}
+
+const formatTotalTime = (minutes) => {
+  if (!minutes) return '0h 0m'
+  const hours = Math.floor(minutes / 60)
+  const remainder = minutes % 60
+  return `${hours}h ${remainder}m`
+}
+
+const completedQuizzes = quizCatalog.filter((quiz) => quiz.completed)
+const totalMinutesSpent = completedQuizzes.reduce((sum, quiz) => sum + (quiz.time || 0), 0)
+
+export const stats = {
+  totalQuizzes: quizCatalog.length,
+  completedQuizzes: completedQuizzes.length,
+  averageScore: calculateAverageScore(quizCatalog),
+  totalTimeSpent: formatTotalTime(totalMinutesSpent),
+}
+
+export const quizzes = quizCatalog

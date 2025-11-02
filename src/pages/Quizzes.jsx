@@ -18,12 +18,13 @@ import {
   Timer,
   HelpCircle,
   Target,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { questionBank } from "../data/quizQuestions";
+import { quizCatalog } from "../data/quizzes";
+import { stats as quizSummary } from "../data/quizData";
+import { useQuiz } from "../context/QuizContext";
 
 const QUICK_QUESTION_STORAGE_KEY = "placement-portal::quick-question-pool";
 
@@ -90,368 +91,35 @@ const Quizzes = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedQuiz, setExpandedQuiz] = useState(null);
   const [quickQuestions] = useState(() => selectQuickQuestions());
-  const [revealedAnswers, setRevealedAnswers] = useState({});
+  const [selectedAnswers, setSelectedAnswers] = useState({});
+  const { recordAttempt, totals: quickTotals, accuracy: quickAccuracy } = useQuiz();
   const navigate = useNavigate(); // Initialize navigate
 
-  // Sample quiz data
-  const quizzes = [
-    {
-      id: 1,
-      title: "Aptitude Test: Quantitative Ability",
-      description: "Test your quantitative skills with these challenging problems",
-      category: "aptitude",
-      difficulty: "medium",
-      questions: 20,
-      time: 30,
-      completed: true,
-      score: 85,
-      attempts: 3,
-      bestScore: 92,
-      topics: ["Percentages", "Ratios", "Time & Work", "Profit & Loss"]
-    },
-    {
-      id: 2,
-      title: "Verbal Ability Practice",
-      description: "Improve your English grammar and vocabulary",
-      category: "verbal",
-      difficulty: "easy",
-      questions: 15,
-      time: 20,
-      completed: true,
-      score: 78,
-      attempts: 2,
-      bestScore: 78,
-      topics: ["Grammar", "Vocabulary", "Reading Comprehension"]
-    },
-    {
-      id: 3,
-      title: "Logical Reasoning Challenge",
-      description: "Advanced logical reasoning problems",
-      category: "reasoning",
-      difficulty: "hard",
-      questions: 25,
-      time: 40,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Puzzles", "Series", "Pattern Recognition", "Deductive Reasoning"]
-    },
-    {
-      id: 4,
-      title: "Data Structures & Algorithms",
-      description: "Test your DSA knowledge for technical interviews",
-      category: "technical",
-      difficulty: "hard",
-      questions: 15,
-      time: 45,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Arrays", "Linked Lists", "Trees", "Sorting Algorithms"]
-    },
-    {
-      id: 5,
-      title: "DBMS Fundamentals",
-      description: "Database management systems concepts",
-      category: "technical",
-      difficulty: "medium",
-      questions: 20,
-      time: 30,
-      completed: true,
-      score: 90,
-      attempts: 1,
-      bestScore: 90,
-      topics: ["SQL", "Normalization", "Transactions", "Indexing"]
-    },
-    {
-      id: 6,
-      title: "Operating Systems Concepts",
-      description: "Test your knowledge of OS fundamentals",
-      category: "technical",
-      difficulty: "medium",
-      questions: 18,
-      time: 25,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Process Management", "Memory Management", "Scheduling"]
-    },
-    {
-      id: 7,
-      title: "Company Specific: TCS Pattern",
-      description: "Practice questions based on TCS recruitment pattern",
-      category: "company",
-      difficulty: "medium",
-      questions: 30,
-      time: 45,
-      completed: true,
-      score: 76,
-      attempts: 2,
-      bestScore: 76,
-      topics: ["Quantitative", "Verbal", "Programming", "Reasoning"]
-    },
-    {
-      id: 8,
-      title: "Company Specific: Infosys Pattern",
-      description: "Practice questions based on Infosys recruitment pattern",
-      category: "company",
-      difficulty: "medium",
-      questions: 25,
-      time: 35,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Pseudo Code", "Logical Reasoning", "Verbal Ability"]
-    },
-    {
-      id: 9,
-      title: "Aptitude: Probability and Statistics",
-      description: "Master probability and statistics for aptitude tests",
-      category: "aptitude",
-      difficulty: "medium",
-      questions: 20,
-      time: 30,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Probability", "Statistics", "Combinatorics"]
-    },
-    {
-      id: 10,
-      title: "Verbal: Sentence Correction",
-      description: "Practice sentence correction and grammar rules",
-      category: "verbal",
-      difficulty: "easy",
-      questions: 15,
-      time: 20,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Grammar", "Sentence Structure", "Error Detection"]
-    },
-    {
-      id: 11,
-      title: "Technical: Networking Basics",
-      description: "Test your knowledge of computer networking fundamentals",
-      category: "technical",
-      difficulty: "medium",
-      questions: 18,
-      time: 25,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["OSI Model", "TCP/IP", "Routing"]
-    },
-    {
-      id: 12,
-      title: "Technical: Cybersecurity Essentials",
-      description: "Learn and test your cybersecurity basics",
-      category: "technical",
-      difficulty: "hard",
-      questions: 20,
-      time: 40,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Encryption", "Threat Analysis", "Firewalls"]
-    },
-    {
-      id: 13,
-      title: "Aptitude: Geometry and Mensuration",
-      description: "Solve problems on geometry and mensuration",
-      category: "aptitude",
-      difficulty: "hard",
-      questions: 25,
-      time: 40,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Triangles", "Circles", "Volume & Surface Area"]
-    },
-    {
-      id: 14,
-      title: "Verbal: Reading Comprehension",
-      description: "Improve your reading comprehension skills",
-      category: "verbal",
-      difficulty: "medium",
-      questions: 20,
-      time: 30,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Passage Analysis", "Critical Thinking", "Inference"]
-    },
-    {
-      id: 15,
-      title: "Reasoning: Analytical Puzzles",
-      description: "Challenge yourself with analytical puzzles",
-      category: "reasoning",
-      difficulty: "hard",
-      questions: 30,
-      time: 50,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Seating Arrangements", "Blood Relations", "Logical Deductions"]
-    },
-    {
-      id: 16,
-      title: "Technical: Software Engineering Basics",
-      description: "Test your knowledge of software engineering principles",
-      category: "technical",
-      difficulty: "easy",
-      questions: 15,
-      time: 20,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["SDLC", "Agile Methodology", "Version Control"]
-    },
-    {
-      id: 17,
-      title: "Technical: Cloud Computing Fundamentals",
-      description: "Learn and test your cloud computing basics",
-      category: "technical",
-      difficulty: "medium",
-      questions: 18,
-      time: 30,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["AWS", "Azure", "Virtualization"]
-    },
-    {
-      id: 18,
-      title: "Aptitude: Basic Arithmetic",
-      description: "Practice fundamental arithmetic operations",
-      category: "aptitude",
-      difficulty: "easy",
-      questions: 10,
-      time: 15,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Addition", "Subtraction", "Multiplication", "Division"]
-    },
-    {
-      id: 19,
-      title: "Aptitude: Advanced Probability",
-      description: "Solve challenging probability problems",
-      category: "aptitude",
-      difficulty: "hard",
-      questions: 25,
-      time: 40,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Bayes Theorem", "Conditional Probability", "Random Variables"]
-    },
-    {
-      id: 20,
-      title: "Verbal: Synonyms and Antonyms",
-      description: "Enhance your vocabulary with synonyms and antonyms",
-      category: "verbal",
-      difficulty: "easy",
-      questions: 12,
-      time: 15,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Synonyms", "Antonyms", "Word Usage"]
-    },
-    {
-      id: 21,
-      title: "Verbal: Critical Reasoning",
-      description: "Test your critical reasoning skills",
-      category: "verbal",
-      difficulty: "hard",
-      questions: 20,
-      time: 30,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Assumptions", "Conclusions", "Arguments"]
-    },
-    {
-      id: 22,
-      title: "Reasoning: Basic Patterns",
-      description: "Identify simple patterns and sequences",
-      category: "reasoning",
-      difficulty: "easy",
-      questions: 10,
-      time: 15,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Number Patterns", "Shape Patterns"]
-    },
-    {
-      id: 23,
-      title: "Reasoning: Advanced Logical Deductions",
-      description: "Challenge yourself with advanced logical deductions",
-      category: "reasoning",
-      difficulty: "hard",
-      questions: 30,
-      time: 50,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Syllogisms", "Complex Puzzles", "Critical Thinking"]
-    },
-    {
-      id: 24,
-      title: "Technical: Basics of Programming",
-      description: "Test your understanding of basic programming concepts",
-      category: "technical",
-      difficulty: "easy",
-      questions: 15,
-      time: 20,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Variables", "Loops", "Functions"]
-    },
-    {
-      id: 25,
-      title: "Technical: Advanced Algorithms",
-      description: "Solve complex algorithmic problems",
-      category: "technical",
-      difficulty: "hard",
-      questions: 20,
-      time: 40,
-      completed: false,
-      score: null,
-      attempts: 0,
-      bestScore: null,
-      topics: ["Dynamic Programming", "Graph Theory", "Greedy Algorithms"]
-    }
-  ];
+  const quizzes = quizCatalog;
+  const stats = quizSummary;
 
-  const toggleAnswerVisibility = (questionId) => {
-    setRevealedAnswers((prev) => ({
+  const handleOptionSelect = (question, optionIndex) => {
+    const optionValue = question.options[optionIndex];
+    const isCorrect = optionValue === question.answer;
+
+    setSelectedAnswers((prev) => ({
       ...prev,
-      [questionId]: !prev[questionId],
+      [question.id]: {
+        index: optionIndex,
+        isCorrect,
+      },
     }));
+
+    recordAttempt({
+      questionId: question.id,
+      correct: isCorrect,
+      category: question.category,
+      difficulty: question.difficulty,
+      timeTaken: 1,
+      prompt: question.question,
+      source: "quick-practice",
+      quizId: question.id,
+    });
   };
 
   const categories = [
@@ -469,13 +137,6 @@ const Quizzes = () => {
     { id: "medium", label: "Medium" },
     { id: "hard", label: "Hard" }
   ];
-
-  const stats = {
-    totalQuizzes: 24,
-    completedQuizzes: 12,
-    averageScore: 78,
-    totalTimeSpent: "15h 30m"
-  };
 
   const filteredQuizzes = quizzes.filter(quiz => {
     // Category filter
@@ -557,9 +218,26 @@ const Quizzes = () => {
               </div>
             </div>
 
+            {quickTotals.attempts > 0 && (
+              <div
+                className={`mt-4 flex flex-col gap-2 rounded-lg border ${theme.border.primary} ${
+                  theme.isDark ? "bg-indigo-500/10" : "bg-indigo-50"
+                } p-3 text-sm`}
+              >
+                <div className="flex items-center gap-2 font-semibold text-indigo-600 dark:text-indigo-400">
+                  <BarChart3 size={16} />
+                  <span>Your quick practice progress</span>
+                </div>
+                <p className={`${theme.text.secondary}`}>
+                  Answered <span className="font-semibold">{quickTotals.attempts}</span> questions with
+                  an accuracy of <span className="font-semibold">{quickAccuracy}%</span>.
+                </p>
+              </div>
+            )}
+
             <div className="mt-4 space-y-4">
               {quickQuestions.map((question, index) => {
-                const isRevealed = Boolean(revealedAnswers[question.id]);
+                const selection = selectedAnswers[question.id];
                 const answerIndex = question.options.findIndex(
                   (option) => option === question.answer
                 );
@@ -595,48 +273,64 @@ const Quizzes = () => {
 
                     <ul className="mt-3 space-y-2">
                       {question.options.map((option, optionIndex) => {
-                        const isCorrect =
-                          isRevealed && option === question.answer;
+                        const isSelected = selection?.index === optionIndex;
+                        const isCorrectOption = option === question.answer;
+                        const isCorrectSelection = isSelected && selection?.isCorrect;
+                        const isIncorrectSelection = isSelected && selection && !selection.isCorrect;
+                        const showCorrectHighlight =
+                          selection && !selection.isCorrect && isCorrectOption;
+
+                        let optionClasses = `${theme.border.primary} ${
+                          theme.isDark ? "bg-slate-900/60" : "bg-slate-50"
+                        }`;
+
+                        if (selection) {
+                          if (isCorrectSelection) {
+                            optionClasses = "border-green-500 bg-green-500/10 text-green-600 font-semibold";
+                          } else if (isIncorrectSelection) {
+                            optionClasses = "border-rose-500 bg-rose-500/10 text-rose-600 font-semibold";
+                          } else if (showCorrectHighlight) {
+                            optionClasses = "border-green-500/60 bg-green-500/10 text-green-600";
+                          }
+                        }
+
                         return (
-                          <li
-                            key={optionIndex}
-                            className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-sm ${
-                              isCorrect
-                                ? "border-indigo-500 bg-indigo-500/10 font-medium"
-                                : `${theme.border.primary} ${
-                                    theme.isDark
-                                      ? "bg-slate-900/60"
-                                      : "bg-slate-50"
-                                  }`
-                            }`}
-                          >
-                            <span className="font-semibold">
-                              {String.fromCharCode(65 + optionIndex)}.
-                            </span>
-                            <span>{option}</span>
+                          <li key={optionIndex}>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleOptionSelect(question, optionIndex)
+                              }
+                              className={`flex w-full items-start gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors ${optionClasses}`}
+                            >
+                              <span className="font-semibold">
+                                {String.fromCharCode(65 + optionIndex)}.
+                              </span>
+                              <span>{option}</span>
+                            </button>
                           </li>
                         );
                       })}
                     </ul>
 
-                    <button
-                      type="button"
-                      onClick={() => toggleAnswerVisibility(question.id)}
-                      className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-500"
-                    >
-                      {isRevealed ? <EyeOff size={16} /> : <Eye size={16} />}
-                      {isRevealed ? "Hide answer" : "Show answer"}
-                    </button>
-
-                    {isRevealed && (
+                    {selection && (
                       <div
-                        className={`mt-3 rounded-lg border-l-4 border-indigo-500 px-3 py-2 text-sm ${
-                          theme.isDark ? "bg-slate-900/50" : "bg-indigo-50"
+                        className={`mt-3 rounded-lg border-l-4 px-3 py-2 text-sm ${
+                          selection.isCorrect
+                            ? theme.isDark
+                              ? "border-green-500 bg-green-500/10"
+                              : "border-green-500 bg-green-50"
+                            : theme.isDark
+                            ? "border-rose-500 bg-rose-500/10"
+                            : "border-rose-500 bg-rose-50"
                         }`}
                       >
                         <p className="font-semibold">
-                          Correct: {answerLabel ? `${answerLabel}. ` : ""}
-                          {question.answer}
+                          {selection.isCorrect
+                            ? "Correct! Great job."
+                            : `Not quite. Correct answer: ${
+                                answerLabel ? `${answerLabel}. ` : ""
+                              }${question.answer}`}
                         </p>
                         {question.explanation && (
                           <p className={`mt-1 ${theme.text.muted}`}>
@@ -789,7 +483,7 @@ const Quizzes = () => {
                 <div className={`flex items-center gap-4 text-sm ${theme.text.muted} mb-4`}>
                   <div className="flex items-center gap-1">
                     <HelpCircle size={16} />
-                    <span>{quiz.questions} questions</span>
+                    <span>{quiz.questionSet ? quiz.questionSet.length : 0} questions</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock size={16} />
@@ -807,6 +501,22 @@ const Quizzes = () => {
                         </span>
                       ))}
                     </div>
+
+                    {quiz.questionSet && quiz.questionSet.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="font-medium mb-2">Sample Questions</h4>
+                        <ol className={`list-decimal space-y-2 pl-5 text-sm ${theme.text.secondary}`}>
+                          {quiz.questionSet.slice(0, 3).map((question) => (
+                            <li key={question.id}>{question.prompt}</li>
+                          ))}
+                        </ol>
+                        {quiz.questionSet.length > 3 && (
+                          <p className={`mt-2 text-xs ${theme.text.muted}`}>
+                            Contains {quiz.questionSet.length} total questions.
+                          </p>
+                        )}
+                      </div>
+                    )}
                     
                     {quiz.completed && (
                       <div className={`mt-4 pt-4 border-t ${theme.border.default}`}>
