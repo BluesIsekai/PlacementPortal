@@ -211,6 +211,74 @@ export const QuizProvider = ({ children }) => {
         : 0,
     }))
 
+    let quickPracticeStats = {
+      answered: 0,
+      correct: 0,
+      timeSpentMinutes: 0,
+    }
+
+    const groupedQuizStats = Object.values(state.attempts).reduce((acc, attempt) => {
+      if (attempt.quizId === 'quick-practice') {
+        quickPracticeStats = {
+          answered: quickPracticeStats.answered + 1,
+          correct: quickPracticeStats.correct + (attempt.correct ? 1 : 0),
+          timeSpentMinutes: quickPracticeStats.timeSpentMinutes + (attempt.timeTaken || 0),
+        }
+        return acc
+      }
+
+      if (!attempt.quizId) {
+        return acc
+      }
+
+      const existing = acc[attempt.quizId] || {
+        answered: 0,
+        correct: 0,
+        timeSpentMinutes: 0,
+        lastUpdated: 0,
+      }
+
+      const answered = existing.answered + 1
+      const correctTotal = existing.correct + (attempt.correct ? 1 : 0)
+      const timeSpent = existing.timeSpentMinutes + (attempt.timeTaken || 0)
+      const lastUpdated = Math.max(existing.lastUpdated, attempt.updatedAt || 0)
+
+      acc[attempt.quizId] = {
+        answered,
+        correct: correctTotal,
+        timeSpentMinutes: timeSpent,
+        lastUpdated,
+      }
+
+      return acc
+    }, {})
+
+    const quizStats = Object.entries(groupedQuizStats).reduce((acc, [quizId, data]) => {
+      const accuracyForQuiz = data.answered
+        ? Math.round((data.correct / data.answered) * 100)
+        : 0
+
+      acc[quizId] = {
+        ...data,
+        accuracy: accuracyForQuiz,
+      }
+      return acc
+    }, {})
+
+    const quickPractice = quickPracticeStats.answered
+      ? {
+          attempts: quickPracticeStats.answered,
+          correct: quickPracticeStats.correct,
+          timeSpentMinutes: quickPracticeStats.timeSpentMinutes,
+          accuracy: Math.round((quickPracticeStats.correct / quickPracticeStats.answered) * 100),
+        }
+      : {
+          attempts: 0,
+          correct: 0,
+          timeSpentMinutes: 0,
+          accuracy: 0,
+        }
+
     return {
       totals: state.totals,
       categoryStats: state.category,
@@ -220,6 +288,8 @@ export const QuizProvider = ({ children }) => {
       accuracy,
       categoryBreakdown,
       difficultyBreakdown,
+      quizStats,
+      quickPractice,
       recordAttempt,
       resetProgress,
     }

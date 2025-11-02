@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Search,
   Filter,
@@ -12,18 +12,18 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronUp,
-  Star,
   TrendingUp,
   BookOpen,
   Timer,
   HelpCircle,
   Target,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { questionBank } from "../data/quizQuestions";
 import { quizCatalog } from "../data/quizzes";
-import { stats as quizSummary } from "../data/quizData";
+import { stats as baseQuizSummary } from "../data/quizData";
 import { useQuiz } from "../context/QuizContext";
 
 const QUICK_QUESTION_STORAGE_KEY = "placement-portal::quick-question-pool";
@@ -84,6 +84,17 @@ const selectQuickQuestions = () => {
 const formatDifficultyLabel = (value) =>
   value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
 
+const formatDuration = (minutes = 0) => {
+  if (!minutes) return "0m";
+  if (minutes < 1) return "<1m";
+  const rounded = Math.round(minutes);
+  const hours = Math.floor(rounded / 60);
+  const remaining = rounded % 60;
+  if (!hours) return `${remaining}m`;
+  if (!remaining) return `${hours}h`;
+  return `${hours}h ${remaining}m`;
+};
+
 const Quizzes = () => {
   const theme = useTheme();
   const [activeCategory, setActiveCategory] = useState("all");
@@ -92,11 +103,64 @@ const Quizzes = () => {
   const [expandedQuiz, setExpandedQuiz] = useState(null);
   const [quickQuestions] = useState(() => selectQuickQuestions());
   const [selectedAnswers, setSelectedAnswers] = useState({});
-  const { recordAttempt, totals: quickTotals, accuracy: quickAccuracy } = useQuiz();
+  const { recordAttempt, totals, accuracy: overallAccuracy, quizStats, quickPractice } = useQuiz();
+  const [activeQuiz, setActiveQuiz] = useState(null);
+  const [quizQuestionIndex, setQuizQuestionIndex] = useState(0);
+  const [quizResponses, setQuizResponses] = useState({});
+  const [quizStartTime, setQuizStartTime] = useState(null);
+  const [quizSessionSummary, setQuizSessionSummary] = useState(null);
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
   const navigate = useNavigate(); // Initialize navigate
 
   const quizzes = quizCatalog;
-  const stats = quizSummary;
+  const defaultAverageScore = baseQuizSummary.averageScore || 0;
+
+  const computedStats = useMemo(() => {
+    const totalQuizzes = quizzes.length;
+
+    const completedQuizzes = quizzes.reduce((count, quiz) => {
+      const totalQuestions = quiz.questionSet ? quiz.questionSet.length : 0;
+      if (!totalQuestions) return count;
+      const progress = quizStats[quiz.id];
+      if (progress && progress.answered >= totalQuestions) {
+        return count + 1;
+      }
+      return count;
+    }, 0);
+
+    const scoredQuizzes = quizzes.reduce((scores, quiz) => {
+      const totalQuestions = quiz.questionSet ? quiz.questionSet.length : 0;
+      if (!totalQuestions) return scores;
+      const progress = quizStats[quiz.id];
+      if (progress && progress.answered > 0) {
+        const scoreValue = Math.round((progress.correct / totalQuestions) * 100);
+        return [...scores, scoreValue];
+      }
+      return scores;
+    }, []);
+
+    const averageScore = scoredQuizzes.length
+      ? Math.round(
+          scoredQuizzes.reduce((sum, score) => sum + score, 0) / scoredQuizzes.length,
+        )
+      : overallAccuracy || defaultAverageScore;
+
+    const totalTimeSpentLabel = formatDuration(totals.timeSpentMinutes);
+
+    return {
+      totalQuizzes,
+      completedQuizzes,
+      averageScore,
+      totalTimeSpent: totalTimeSpentLabel,
+    };
+  }, [defaultAverageScore, overallAccuracy, totals.timeSpentMinutes, quizStats, quizzes]);
+
+  const stats = {
+    totalQuizzes: computedStats.totalQuizzes,
+    completedQuizzes: computedStats.completedQuizzes,
+    averageScore: computedStats.averageScore,
+    totalTimeSpent: computedStats.totalTimeSpent,
+  };
 
   const handleOptionSelect = (question, optionIndex) => {
     const optionValue = question.options[optionIndex];
@@ -118,8 +182,109 @@ const Quizzes = () => {
       timeTaken: 1,
       prompt: question.question,
       source: "quick-practice",
-      quizId: question.id,
+      quizId: "quick-practice",
     });
+  };
+
+  const startQuizSession = (quiz) => {
+    if (!quiz.questionSet || !quiz.questionSet.length) {
+      console.warn(`Quiz ${quiz.id} does not have any questions defined yet.`);
+      return;
+    }
+
+    setActiveQuiz(quiz);
+    setQuizQuestionIndex(0);
+    setQuizResponses({});
+    setQuizStartTime(Date.now());
+    setQuizSessionSummary(null);
+    setQuizSubmitted(false);
+  };
+
+  const closeQuizSession = () => {
+    setActiveQuiz(null);
+    setQuizQuestionIndex(0);
+    setQuizResponses({});
+    setQuizStartTime(null);
+    setQuizSessionSummary(null);
+    setQuizSubmitted(false);
+  };
+
+  const handleQuizAnswerSelect = (questionId, optionIndex) => {
+    setQuizResponses((prev) => ({
+      ...prev,
+      [questionId]: optionIndex,
+    }));
+  };
+
+  const goToNextQuestion = () => {
+    if (!activeQuiz) return;
+    setQuizQuestionIndex((current) =>
+      Math.min(current + 1, activeQuiz.questionSet.length - 1),
+    );
+  };
+
+  const goToPreviousQuestion = () => {
+    if (!activeQuiz) return;
+    setQuizQuestionIndex((current) => Math.max(current - 1, 0));
+  };
+
+  const handleSubmitQuiz = () => {
+    if (!activeQuiz || !activeQuiz.questionSet?.length || quizSubmitted) return;
+
+    const elapsedMs = quizStartTime ? Date.now() - quizStartTime : 0;
+    const elapsedMinutes = Math.max(elapsedMs / 60000, 0.1);
+    const totalQuestions = activeQuiz.questionSet.length;
+    // Distribute total session time across questions so analytics stay consistent.
+    const perQuestionTime = totalQuestions
+      ? elapsedMinutes / totalQuestions
+      : elapsedMinutes;
+
+    let correctCount = 0;
+
+    const detailedResults = activeQuiz.questionSet.map((question) => {
+      const selectedIndex = quizResponses[question.id];
+      const selectedOption =
+        selectedIndex !== undefined ? question.options[selectedIndex] : null;
+      const isCorrect = selectedOption === question.answer;
+
+      if (isCorrect) {
+        correctCount += 1;
+      }
+
+      recordAttempt({
+        questionId: question.id,
+        correct: Boolean(isCorrect),
+        category: activeQuiz.category,
+        difficulty: activeQuiz.difficulty,
+        timeTaken: perQuestionTime,
+        prompt: question.prompt,
+        source: "full-quiz",
+        quizId: activeQuiz.id,
+      });
+
+      return {
+        question,
+        selectedIndex,
+        selectedOption,
+        isCorrect,
+      };
+    });
+
+    setQuizSubmitted(true);
+    setQuizSessionSummary({
+      totalQuestions,
+      totalCorrect: correctCount,
+      score: totalQuestions ? Math.round((correctCount / totalQuestions) * 100) : 0,
+      durationMinutes: elapsedMinutes,
+      results: detailedResults,
+    });
+  };
+
+  const handleStartRecommendedQuiz = (quizId) => {
+    const recommendedQuiz = quizzes.find((item) => item.id === quizId);
+    if (recommendedQuiz) {
+      startQuizSession(recommendedQuiz);
+    }
   };
 
   const categories = [
@@ -172,6 +337,34 @@ const Quizzes = () => {
     }
   };
 
+  const isQuizActive = Boolean(activeQuiz);
+  const activeQuestionCount = activeQuiz?.questionSet?.length || 0;
+  const currentQuizQuestion =
+    activeQuiz && activeQuiz.questionSet && activeQuestionCount
+      ? activeQuiz.questionSet[Math.min(quizQuestionIndex, activeQuestionCount - 1)]
+      : null;
+  const answeredCount = activeQuiz ? Object.keys(quizResponses).length : 0;
+  const allQuizQuestionsAnswered =
+    activeQuiz && activeQuiz.questionSet
+      ? activeQuiz.questionSet.every((question) => quizResponses[question.id] !== undefined)
+      : false;
+  const quizProgressPercent =
+    activeQuiz && activeQuestionCount
+      ? Math.min(100, Math.round((answeredCount / activeQuestionCount) * 100))
+      : 0;
+  const nextCategoryQuiz =
+    isQuizActive && activeQuiz
+      ? quizzes.find((quizItem) => {
+          if (quizItem.category !== activeQuiz.category || quizItem.id === activeQuiz.id) {
+            return false;
+          }
+          const totalQuestions = quizItem.questionSet ? quizItem.questionSet.length : 0;
+          if (!totalQuestions) return false;
+          const peerProgress = quizStats[quizItem.id];
+          return !(peerProgress && peerProgress.answered >= totalQuestions);
+        })
+      : null;
+
   return (
     <div className={`min-h-screen ${theme.bg.primary} ${theme.text.primary}`}>
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -218,7 +411,7 @@ const Quizzes = () => {
               </div>
             </div>
 
-            {quickTotals.attempts > 0 && (
+            {quickPractice.attempts > 0 && (
               <div
                 className={`mt-4 flex flex-col gap-2 rounded-lg border ${theme.border.primary} ${
                   theme.isDark ? "bg-indigo-500/10" : "bg-indigo-50"
@@ -229,8 +422,8 @@ const Quizzes = () => {
                   <span>Your quick practice progress</span>
                 </div>
                 <p className={`${theme.text.secondary}`}>
-                  Answered <span className="font-semibold">{quickTotals.attempts}</span> questions with
-                  an accuracy of <span className="font-semibold">{quickAccuracy}%</span>.
+                  Answered <span className="font-semibold">{quickPractice.attempts}</span> questions with
+                  an accuracy of <span className="font-semibold">{quickPractice.accuracy}%</span>.
                 </p>
               </div>
             )}
@@ -457,116 +650,175 @@ const Quizzes = () => {
 
         {/* Quizzes Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredQuizzes.map(quiz => (
-            <div key={quiz.id} className={`${theme.bg.card} rounded-xl ${theme.shadow.card} overflow-hidden`}>
-              <div className="p-5">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className={`p-2 ${theme.bg.hover} rounded-lg`}>
-                      {getCategoryIcon(quiz.category)}
+          {filteredQuizzes.map((quiz) => {
+            const questionCount = quiz.questionSet ? quiz.questionSet.length : 0;
+            const progress = quizStats[quiz.id];
+            const answeredQuestions = progress?.answered || 0;
+            const correctQuestions = progress?.correct || 0;
+            const quizAccuracy = questionCount
+              ? Math.round((correctQuestions / questionCount) * 100)
+              : null;
+            const quizCompleted = questionCount ? answeredQuestions >= questionCount : false;
+            const actionLabel = quizCompleted
+              ? "Retake Quiz"
+              : answeredQuestions
+              ? "Continue Quiz"
+              : "Start Quiz";
+            const progressRatio = questionCount
+              ? Math.min(1, answeredQuestions / questionCount)
+              : 0;
+            const lastUpdatedLabel = progress?.lastUpdated
+              ? new Date(progress.lastUpdated).toLocaleDateString()
+              : null;
+
+            return (
+              <div key={quiz.id} className={`${theme.bg.card} rounded-xl ${theme.shadow.card} overflow-hidden`}>
+                <div className="p-5">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className={`p-2 ${theme.bg.hover} rounded-lg`}>
+                        {getCategoryIcon(quiz.category)}
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(quiz.difficulty)}`}>
+                        {quiz.difficulty.charAt(0).toUpperCase() + quiz.difficulty.slice(1)}
+                      </span>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(quiz.difficulty)}`}>
-                      {quiz.difficulty.charAt(0).toUpperCase() + quiz.difficulty.slice(1)}
-                    </span>
+                    {quizCompleted && (
+                      <div className={`flex items-center gap-1 ${theme.isDark ? 'text-green-400' : 'text-green-600'}`}>
+                        <CheckCircle size={16} />
+                        <span className="text-sm font-medium">Completed</span>
+                      </div>
+                    )}
                   </div>
-                  {quiz.completed && (
-                    <div className={`flex items-center gap-1 ${theme.isDark ? 'text-green-400' : 'text-green-600'}`}>
-                      <CheckCircle size={16} />
-                      <span className="text-sm font-medium">Completed</span>
+
+                  <h3 className="font-semibold text-lg mb-2">{quiz.title}</h3>
+                  <p className={`${theme.text.muted} text-sm mb-4`}>{quiz.description}</p>
+
+                  <div className={`flex items-center gap-4 text-sm ${theme.text.muted} mb-4`}>
+                    <div className="flex items-center gap-1">
+                      <HelpCircle size={16} />
+                      <span>{questionCount} questions</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock size={16} />
+                      <span>{quiz.time} mins</span>
+                    </div>
+                    {lastUpdatedLabel && (
+                      <div className="flex items-center gap-1">
+                        <Timer size={16} />
+                        <span>Updated {lastUpdatedLabel}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {questionCount > 0 && (
+                    <div className="mb-4">
+                      <div className={`flex items-center justify-between text-xs ${theme.text.muted}`}>
+                        <span>{answeredQuestions} / {questionCount} answered</span>
+                        <span>
+                          {quizAccuracy !== null ? `${quizAccuracy}% accuracy` : "Not attempted"}
+                        </span>
+                      </div>
+                      <div className={`mt-2 h-2 rounded-full ${theme.isDark ? 'bg-slate-800' : 'bg-slate-200'}`}>
+                        <div
+                          className="h-2 rounded-full bg-indigo-500 transition-all"
+                          style={{ width: `${progressRatio * 100}%` }}
+                        />
+                      </div>
                     </div>
                   )}
-                </div>
-                
-                <h3 className="font-semibold text-lg mb-2">{quiz.title}</h3>
-                <p className={`${theme.text.muted} text-sm mb-4`}>{quiz.description}</p>
-                
-                <div className={`flex items-center gap-4 text-sm ${theme.text.muted} mb-4`}>
-                  <div className="flex items-center gap-1">
-                    <HelpCircle size={16} />
-                    <span>{quiz.questionSet ? quiz.questionSet.length : 0} questions</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock size={16} />
-                    <span>{quiz.time} mins</span>
-                  </div>
-                </div>
-                
-                {expandedQuiz === quiz.id && (
-                  <div className={`mt-4 p-4 ${theme.bg.accent} rounded-lg`}>
-                    <h4 className="font-medium mb-2">Topics Covered:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {quiz.topics.map((topic, index) => (
-                        <span key={index} className={`px-2 py-1 ${theme.bg.hover} text-xs rounded-full`}>
-                          {topic}
-                        </span>
-                      ))}
-                    </div>
 
-                    {quiz.questionSet && quiz.questionSet.length > 0 && (
-                      <div className="mt-4">
-                        <h4 className="font-medium mb-2">Sample Questions</h4>
-                        <ol className={`list-decimal space-y-2 pl-5 text-sm ${theme.text.secondary}`}>
-                          {quiz.questionSet.slice(0, 3).map((question) => (
-                            <li key={question.id}>{question.prompt}</li>
-                          ))}
-                        </ol>
-                        {quiz.questionSet.length > 3 && (
-                          <p className={`mt-2 text-xs ${theme.text.muted}`}>
-                            Contains {quiz.questionSet.length} total questions.
-                          </p>
-                        )}
+                  {expandedQuiz === quiz.id && (
+                    <div className={`mt-4 p-4 ${theme.bg.accent} rounded-lg`}>
+                      <h4 className="font-medium mb-2">Topics Covered:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {quiz.topics.map((topic, index) => (
+                          <span key={index} className={`px-2 py-1 ${theme.bg.hover} text-xs rounded-full`}>
+                            {topic}
+                          </span>
+                        ))}
                       </div>
-                    )}
-                    
-                    {quiz.completed && (
-                      <div className={`mt-4 pt-4 border-t ${theme.border.default}`}>
-                        <h4 className="font-medium mb-2">Your Performance:</h4>
-                        <div className="flex items-center gap-4">
-                          <div className={`flex items-center gap-1 ${theme.isDark ? 'text-green-400' : 'text-green-600'}`}>
-                            <span className="font-semibold">{quiz.score}%</span>
-                            <span>Score</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="font-semibold">{quiz.attempts}</span>
-                            <span>Attempts</span>
-                          </div>
-                          {quiz.bestScore && (
-                            <div className={`flex items-center gap-1 ${theme.isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-                              <Star size={14} className="fill-current" />
-                              <span className="font-semibold">{quiz.bestScore}%</span>
-                              <span>Best</span>
-                            </div>
+
+                      {quiz.questionSet && quiz.questionSet.length > 0 && (
+                        <div className="mt-4">
+                          <h4 className="font-medium mb-2">Sample Questions</h4>
+                          <ol className={`list-decimal space-y-2 pl-5 text-sm ${theme.text.secondary}`}>
+                            {quiz.questionSet.slice(0, 3).map((question) => (
+                              <li key={question.id}>{question.prompt}</li>
+                            ))}
+                          </ol>
+                          {quiz.questionSet.length > 3 && (
+                            <p className={`mt-2 text-xs ${theme.text.muted}`}>
+                              Contains {quiz.questionSet.length} total questions.
+                            </p>
                           )}
                         </div>
-                      </div>
-                    )}
+                      )}
+
+                      {answeredQuestions > 0 && (
+                        <div className={`mt-4 pt-4 border-t ${theme.border.default}`}>
+                          <h4 className="font-medium mb-2">Your Progress</h4>
+                          <div className="flex flex-wrap items-center gap-4 text-sm">
+                            <div className={`flex items-center gap-1 ${theme.isDark ? 'text-green-400' : 'text-green-600'}`}>
+                              <span className="font-semibold">
+                                {quizAccuracy !== null ? `${quizAccuracy}%` : '--'}
+                              </span>
+                              <span>Score</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="font-semibold">{correctQuestions}</span>
+                              <span>Correct</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="font-semibold">{answeredQuestions}</span>
+                              <span>Answered</span>
+                            </div>
+                            {progress?.timeSpentMinutes && (
+                              <div className="flex items-center gap-1">
+                                <Clock size={14} />
+                                <span>{formatDuration(progress.timeSpentMinutes)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center mt-4">
+                    <button
+                      onClick={() => setExpandedQuiz(expandedQuiz === quiz.id ? null : quiz.id)}
+                      className="text-sm text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-1"
+                    >
+                      {expandedQuiz === quiz.id ? (
+                        <>
+                          Show Less <ChevronUp size={16} />
+                        </>
+                      ) : (
+                        <>
+                          Show Details <ChevronDown size={16} />
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => startQuizSession(quiz)}
+                      disabled={!questionCount}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${
+                        questionCount
+                          ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                          : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                      }`}
+                    >
+                      <Play size={16} />
+                      {actionLabel}
+                    </button>
                   </div>
-                )}
-                
-                <div className="flex justify-between items-center mt-4">
-                  <button
-                    onClick={() => setExpandedQuiz(expandedQuiz === quiz.id ? null : quiz.id)}
-                    className="text-sm text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-1"
-                  >
-                    {expandedQuiz === quiz.id ? (
-                      <>
-                        Show Less <ChevronUp size={16} />
-                      </>
-                    ) : (
-                      <>
-                        Show Details <ChevronDown size={16} />
-                      </>
-                    )}
-                  </button>
-                  
-                  <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2">
-                    <Play size={16} />
-                    {quiz.completed ? 'Retake Quiz' : 'Start Quiz'}
-                  </button>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Empty State */}
@@ -592,6 +844,258 @@ const Quizzes = () => {
           </div>
         )}
       </div>
+
+      {isQuizActive && activeQuiz && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 px-4 py-8">
+          <div
+            className={`relative flex w-full max-w-4xl flex-col overflow-hidden rounded-xl ${theme.bg.card} ${theme.shadow.card} max-h-[90vh]`}
+          >
+            <div className={`flex items-start justify-between border-b ${theme.border.primary} px-6 py-4 ${theme.bg.card}`}>
+              <div>
+                <h2 className="text-xl font-semibold">{activeQuiz.title}</h2>
+                <p className={`text-sm ${theme.text.muted}`}>
+                  {formatDifficultyLabel(activeQuiz.difficulty)} • {activeQuiz.category} • {activeQuestionCount} questions
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeQuizSession}
+                className={`flex items-center gap-1 rounded-lg border ${theme.border.primary} px-3 py-2 text-sm font-medium transition-colors ${theme.text.secondary} hover:${theme.text.primary}`}
+              >
+                <X size={18} />
+                Close
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-6">
+              {quizSubmitted && quizSessionSummary ? (
+                <>
+                  <div className="mb-6">
+                    <h3 className="text-xl font-semibold">Quiz Summary</h3>
+                    <p className={`mt-1 text-sm ${theme.text.muted}`}>
+                      You answered {quizSessionSummary.totalCorrect} of {quizSessionSummary.totalQuestions} questions correctly.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div className={`rounded-lg p-4 text-center ${theme.bg.accent}`}>
+                      <p className="text-3xl font-bold text-indigo-500">{quizSessionSummary.score}%</p>
+                      <p className={`text-sm ${theme.text.muted}`}>Score</p>
+                    </div>
+                    <div className={`rounded-lg p-4 text-center ${theme.bg.accent}`}>
+                      <p className="text-3xl font-bold">{quizSessionSummary.totalCorrect}</p>
+                      <p className={`text-sm ${theme.text.muted}`}>Correct Answers</p>
+                    </div>
+                    <div className={`rounded-lg p-4 text-center ${theme.bg.accent}`}>
+                      <p className="text-3xl font-bold">{formatDuration(quizSessionSummary.durationMinutes)}</p>
+                      <p className={`text-sm ${theme.text.muted}`}>Time Spent</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-8 space-y-4">
+                    {quizSessionSummary.results.map((result, index) => {
+                      const { question, selectedIndex, isCorrect } = result;
+                      const correctIndex = question.options.findIndex((option) => option === question.answer);
+
+                      return (
+                        <div
+                          key={question.id}
+                          className={`rounded-lg border p-4 transition-colors ${
+                            isCorrect
+                              ? theme.isDark
+                                ? "border-green-500 bg-green-500/10"
+                                : "border-green-500 bg-green-50"
+                              : theme.isDark
+                              ? "border-rose-500 bg-rose-500/10"
+                              : "border-rose-500 bg-rose-50"
+                          }`}
+                        >
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <p className="font-medium">{`Q${index + 1}. ${question.prompt}`}</p>
+                            <span className={`text-sm font-semibold ${isCorrect ? 'text-green-600' : 'text-rose-500'}`}>
+                              {isCorrect ? 'Correct' : 'Review'}
+                            </span>
+                          </div>
+
+                          <div className="mt-3 space-y-2 text-sm">
+                            {question.options.map((option, optionIndex) => {
+                              const isOptionCorrect = optionIndex === correctIndex;
+                              const isOptionSelected = optionIndex === selectedIndex;
+                              let optionClasses = `${theme.border.primary} ${theme.isDark ? 'bg-slate-900/60' : 'bg-slate-50'}`;
+
+                              if (isOptionCorrect) {
+                                optionClasses = 'border-green-500 bg-green-500/10 text-green-600';
+                              }
+
+                              if (isOptionSelected && !isOptionCorrect) {
+                                optionClasses = 'border-rose-500 bg-rose-500/10 text-rose-500';
+                              }
+
+                              return (
+                                <div
+                                  key={optionIndex}
+                                  className={`flex items-center justify-between gap-4 rounded-md border px-3 py-2 ${optionClasses}`}
+                                >
+                                  <span>
+                                    {String.fromCharCode(65 + optionIndex)}. {option}
+                                  </span>
+                                  {isOptionCorrect && (
+                                    <span className="text-xs font-semibold uppercase">Correct</span>
+                                  )}
+                                  {isOptionSelected && !isOptionCorrect && (
+                                    <span className="text-xs font-semibold uppercase">Your pick</span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {!isCorrect && question.explanation && (
+                            <p className={`mt-3 text-sm ${theme.text.muted}`}>
+                              Explanation: {question.explanation}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => startQuizSession(activeQuiz)}
+                      className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+                    >
+                      Retake Quiz
+                    </button>
+                    {nextCategoryQuiz && (
+                      <button
+                        type="button"
+                        onClick={() => handleStartRecommendedQuiz(nextCategoryQuiz.id)}
+                        className={`rounded-lg border ${theme.border.primary} px-4 py-2 text-sm font-medium transition-colors ${theme.text.secondary} hover:${theme.text.primary}`}
+                      >
+                        Next {nextCategoryQuiz.category} Quiz
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={closeQuizSession}
+                      className={`rounded-lg border ${theme.border.primary} px-4 py-2 text-sm font-medium transition-colors ${theme.text.secondary} hover:${theme.text.primary}`}
+                    >
+                      Back to Library
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {currentQuizQuestion ? (
+                    <>
+                      <div className="mb-4 flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
+                        <span className="font-medium">
+                          Question {quizQuestionIndex + 1} of {activeQuestionCount}
+                        </span>
+                        <span className={`${theme.text.muted}`}>
+                          {quizProgressPercent}% complete
+                        </span>
+                      </div>
+
+                      <div className="mb-6">
+                        <p className="text-lg font-semibold leading-relaxed">
+                          {currentQuizQuestion.prompt}
+                        </p>
+                      </div>
+
+                      <ul className="space-y-3">
+                        {currentQuizQuestion.options.map((option, optionIndex) => {
+                          const selectedIndex = quizResponses[currentQuizQuestion.id];
+                          const isSelected = selectedIndex === optionIndex;
+                          const optionClasses = isSelected
+                            ? 'border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-semibold'
+                            : `${theme.border.primary} ${theme.isDark ? 'bg-slate-900/60' : 'bg-slate-50'}`;
+
+                          return (
+                            <li key={optionIndex}>
+                              <button
+                                type="button"
+                                onClick={() => handleQuizAnswerSelect(currentQuizQuestion.id, optionIndex)}
+                                className={`flex w-full items-start gap-3 rounded-lg border px-4 py-3 text-left text-sm transition-colors ${optionClasses}`}
+                              >
+                                <span className="font-semibold">
+                                  {String.fromCharCode(65 + optionIndex)}.
+                                </span>
+                                <span>{option}</span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </>
+                  ) : (
+                    <p className={`text-sm ${theme.text.muted}`}>This quiz is loading…</p>
+                  )}
+                </>
+              )}
+            </div>
+
+            {!quizSubmitted && currentQuizQuestion && (
+              <div
+                className={`flex flex-col gap-3 border-t ${theme.border.primary} px-6 py-4 sm:flex-row sm:items-center sm:justify-between ${
+                  theme.isDark ? 'bg-slate-900/40' : 'bg-slate-50'
+                }`}
+              >
+                <div className="flex flex-col gap-1 text-sm">
+                  <span className={theme.text.muted}>
+                    Answered {answeredCount} of {activeQuestionCount} questions
+                  </span>
+                  <span className={`text-xs ${theme.text.muted}`}>
+                    {allQuizQuestionsAnswered
+                      ? "You're ready to submit."
+                      : "Answer every question to enable submission."}
+                  </span>
+                </div>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={goToPreviousQuestion}
+                    disabled={quizQuestionIndex === 0}
+                    className={`rounded-lg border ${theme.border.primary} px-4 py-2 text-sm font-medium transition-colors ${
+                      quizQuestionIndex === 0
+                        ? 'cursor-not-allowed opacity-50'
+                        : `${theme.text.secondary} hover:${theme.text.primary}`
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goToNextQuestion}
+                    disabled={quizQuestionIndex >= activeQuestionCount - 1}
+                    className={`rounded-lg border ${theme.border.primary} px-4 py-2 text-sm font-medium transition-colors ${
+                      quizQuestionIndex >= activeQuestionCount - 1
+                        ? 'cursor-not-allowed opacity-50'
+                        : `${theme.text.secondary} hover:${theme.text.primary}`
+                    }`}
+                  >
+                    Next
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSubmitQuiz}
+                    disabled={!allQuizQuestionsAnswered}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                      allQuizQuestionsAnswered
+                        ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                        : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Submit Quiz
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
