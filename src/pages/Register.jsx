@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { auth, isFirebaseConfigured } from '../lib/firebase'
+import { getUserProfileStatus, updateProfileCompletionStatus } from '../utils/profileUtils'
 import {
   Sun,
   Moon,
@@ -38,6 +39,8 @@ const themes = {
       'bg-red-50 border border-red-200 text-red-800 rounded-xl p-3 text-sm',
     warning:
       'bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3 text-sm',
+    success:
+      'bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl p-3 text-sm',
   },
   dark: {
     root: 'min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black',
@@ -86,6 +89,8 @@ const themes = {
       'bg-red-500/20 border border-red-400/30 text-red-100 rounded-xl p-3 text-sm backdrop-blur-sm',
     warning:
       'bg-amber-500/20 border border-amber-400/30 text-amber-100 rounded-xl p-3 text-sm backdrop-blur-sm',
+    success:
+      'bg-emerald-500/20 border border-emerald-400/30 text-emerald-100 rounded-xl p-3 text-sm backdrop-blur-sm',
   },
 }
 
@@ -99,6 +104,7 @@ export default function Register() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   // Theme state - stored in localStorage for persistence
   const [currentTheme, setCurrentTheme] = useState(() => {
@@ -122,25 +128,119 @@ export default function Register() {
   const onSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setSuccess('')
+    
     if (password !== confirm) {
       setError('Passwords do not match')
       return
     }
-    if (!isFirebaseConfigured) {
-      setError(
-        'Firebase is not configured. Fill .env VITE_FIREBASE_* and restart dev server.',
-      )
+    
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long')
       return
     }
+
     setLoading(true)
+    
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password)
-      if (name) {
-        await updateProfile(cred.user, { displayName: name })
+      let registrationSuccess = false;
+      let userEmail = email;
+      let userName = name;
+
+      // Try Firebase registration first (if configured)
+      if (isFirebaseConfigured && auth) {
+        try {
+          const cred = await createUserWithEmailAndPassword(auth, email, password)
+          if (name) {
+            await updateProfile(cred.user, { displayName: name })
+          }
+          userEmail = cred.user.email;
+          userName = cred.user.displayName || name;
+          registrationSuccess = true;
+          console.log('✅ Firebase registration successful');
+        } catch (firebaseError) {
+          console.warn('Firebase registration failed, trying backend only:', firebaseError.message);
+          // Continue with backend registration even if Firebase fails
+        }
       }
-      navigate('/dashboard')
+
+      // Always try backend registration for profile management
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: userName,
+            email: userEmail,
+            password: password,
+            confirmPassword: confirm
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          // Store authentication data
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('userEmail', data.user.email);
+          localStorage.setItem('userName', data.user.name);
+          
+          // Store user data
+          const userData = {
+            ...data.user,
+            fullName: data.user.name,
+            username: data.user.name.toLowerCase().replace(/\s+/g, ''),
+            email: data.user.email
+          };
+          localStorage.setItem('user', JSON.stringify(userData));
+          
+          registrationSuccess = true;
+          console.log('✅ Backend registration successful:', data);
+          
+          setSuccess('🎉 Registration successful! Redirecting...');
+          
+          // Check if profile is complete and redirect accordingly
+          const { isComplete } = getUserProfileStatus();
+          
+          setTimeout(() => {
+            if (isComplete) {
+              navigate('/dashboard');
+            } else {
+              // New users need to complete their profile
+              navigate('/complete-profile');
+            }
+          }, 1500);
+          
+        } else {
+          throw new Error(data.message || 'Backend registration failed');
+        }
+      } catch (backendError) {
+        console.error('Backend registration failed:', backendError);
+        
+        if (!registrationSuccess) {
+          // If both Firebase and backend failed
+          throw new Error(backendError.message || 'Registration failed. Please try again.');
+        } else {
+          // Firebase succeeded but backend failed - still allow login
+          console.warn('Firebase registration succeeded but backend failed. User can still login.');
+          localStorage.setItem('token', 'firebase_token_' + Date.now());
+          localStorage.setItem('userEmail', userEmail);
+          localStorage.setItem('userName', userName);
+          
+          setSuccess('🎉 Registration successful! Redirecting...');
+          
+          setTimeout(() => {
+            navigate('/complete-profile');
+          }, 1500);
+        }
+      }
+
     } catch (err) {
-      setError(err?.message || 'Registration failed')
+      console.error('Registration error:', err);
+      setError(err?.message || 'Registration failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -272,6 +372,25 @@ export default function Register() {
                   />
                 </svg>
                 <span>{error}</span>
+              </div>
+            </div>
+          )}
+
+          {success && (
+            <div className={styles.success}>
+              <div className="flex items-center space-x-2">
+                <svg
+                  className="h-4 w-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span>{success}</span>
               </div>
             </div>
           )}

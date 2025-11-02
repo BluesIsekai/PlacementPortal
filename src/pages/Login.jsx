@@ -7,6 +7,7 @@ import {
   sendPasswordResetEmail,
 } from 'firebase/auth'
 import { auth, isFirebaseConfigured } from '../lib/firebase'
+import { getUserProfileStatus, markAsReturningUser } from '../utils/profileUtils'
 import {
   Sun,
   Moon,
@@ -140,9 +141,83 @@ export default function Login() {
     setError('')
     setSuccess('')
     setLoading(true)
+    
     try {
-      await signInWithEmailAndPassword(auth, email, password)
-      navigate('/dashboard')
+      let loginSuccess = false;
+      let userEmail = email;
+
+      // Try Firebase login first (if configured)
+      if (isFirebaseConfigured && auth) {
+        try {
+          await signInWithEmailAndPassword(auth, email, password)
+          userEmail = email;
+          loginSuccess = true;
+          console.log('✅ Firebase login successful');
+        } catch (firebaseError) {
+          console.warn('Firebase login failed, trying backend only:', firebaseError.message);
+          // Continue with backend login even if Firebase fails
+        }
+      }
+
+      // Try backend login for profile management
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          // Store authentication data
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('userEmail', data.user.email);
+          localStorage.setItem('userName', data.user.name);
+          
+          // Store user data
+          localStorage.setItem('user', JSON.stringify(data.user));
+          
+          loginSuccess = true;
+          console.log('✅ Backend login successful:', data);
+          
+        } else {
+          if (!loginSuccess) {
+            throw new Error(data.message || 'Backend login failed');
+          }
+        }
+      } catch (backendError) {
+        console.error('Backend login failed:', backendError);
+        
+        if (!loginSuccess) {
+          throw new Error(backendError.message || 'Login failed. Please check your credentials.');
+        } else {
+          console.warn('Firebase login succeeded but backend failed. Creating demo token.');
+          localStorage.setItem('token', 'firebase_token_' + Date.now());
+          localStorage.setItem('userEmail', userEmail);
+        }
+      }
+
+      if (loginSuccess) {
+        // Check if profile is complete and redirect accordingly
+        const { isComplete } = getUserProfileStatus();
+        
+        if (isComplete) {
+          // Mark as returning user and go to dashboard
+          markAsReturningUser();
+          navigate('/dashboard');
+        } else {
+          // First-time user or incomplete profile - redirect to complete profile
+          navigate('/complete-profile');
+        }
+      }
+      
     } catch (err) {
       const msg = err?.message || 'Login failed'
       setError(msg)
@@ -157,8 +232,25 @@ export default function Login() {
     setLoading(true)
     try {
       const provider = new GoogleAuthProvider()
-      await signInWithPopup(auth, provider)
-      navigate('/dashboard')
+      const result = await signInWithPopup(auth, provider)
+      
+      // Store user info for profile completion
+      const user = result.user
+      localStorage.setItem('userEmail', user.email)
+      localStorage.setItem('userName', user.displayName || user.email)
+      localStorage.setItem('token', 'google_token_' + Date.now())
+      
+      // Check if profile is complete and redirect accordingly
+      const { isComplete } = getUserProfileStatus()
+      
+      if (isComplete) {
+        // Mark as returning user and go to dashboard
+        markAsReturningUser()
+        navigate('/dashboard')
+      } else {
+        // First-time user or incomplete profile - redirect to complete profile
+        navigate('/complete-profile')
+      }
     } catch (err) {
       setError(err?.message || 'Google sign-in failed')
     } finally {

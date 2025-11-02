@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
+// import DemoControls from "../components/DemoControls";
 import { 
   GraduationCap, Code2, Building2, BookOpen, 
   Award, Users, ChevronRight, ArrowRight, Star, 
@@ -889,11 +890,74 @@ const LandingPage = () => {
           transition: transform 0.1s ease-out;
         }
       `}</style>
+      {/* Demo Controls for Testing */}
+      <div className="fixed bottom-4 right-4 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 border border-gray-200 dark:border-gray-700 z-50">
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Demo Controls</h3>
+        <div className="space-y-2">
+          <button
+            onClick={() => {
+              localStorage.setItem('token', 'demo-jwt-token-' + Date.now());
+              localStorage.setItem('userEmail', 'demo@example.com');
+              localStorage.removeItem('isProfileComplete');
+              localStorage.removeItem('userProfile');
+              window.location.href = '/complete-profile';
+            }}
+            className="w-full text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded transition-colors"
+          >
+            🚀 Test Complete Profile Flow
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                const testData = {
+                  name: 'Demo User',
+                  email: 'demo' + Date.now() + '@example.com',
+                  password: 'password123',
+                  confirmPassword: 'password123'
+                };
+                
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(testData)
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                  localStorage.setItem('token', data.token);
+                  localStorage.setItem('userEmail', data.user.email);
+                  alert('✅ Registration test successful! Redirecting to complete profile...');
+                  window.location.href = '/complete-profile';
+                } else {
+                  alert('❌ Registration test failed: ' + data.message);
+                }
+              } catch (error) {
+                alert('🚨 Network error: ' + error.message);
+              }
+            }}
+            className="w-full text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded transition-colors"
+          >
+            🧪 Test Registration API
+          </button>
+          <button
+            onClick={() => {
+              localStorage.removeItem('isProfileComplete');
+              localStorage.removeItem('userProfile');
+              localStorage.removeItem('token');
+              localStorage.removeItem('authToken');
+              localStorage.removeItem('userEmail');
+              alert('Profile reset! You can now test the first-time user flow. Please refresh the page and try logging in.');
+            }}
+            className="w-full text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded transition-colors"
+          >
+            🔄 Reset Profile Data
+          </button>
+        </div>
+      </div>
+      
     </div>
   );
-};
-
-// Custom Icons
+};// Custom Icons
 const FileTextIcon = ({ size }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>

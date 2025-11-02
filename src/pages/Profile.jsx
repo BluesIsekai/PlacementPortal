@@ -75,6 +75,40 @@ const Profile = () => {
     }
   });
 
+  // Load profile data from localStorage if available
+  useEffect(() => {
+    const loadSavedProfile = () => {
+      try {
+        const savedProfile = localStorage.getItem('userProfile');
+        if (savedProfile) {
+          const parsedProfile = JSON.parse(savedProfile);
+          console.log('Loading saved profile from localStorage:', parsedProfile);
+          
+          // Update the profile data with saved information
+          setProfileData(prev => ({
+            ...prev,
+            name: parsedProfile.fullName || prev.name,
+            email: parsedProfile.email || prev.email,
+            phone: parsedProfile.phoneNumber || parsedProfile.phone || prev.phone,
+            bio: parsedProfile.bio || prev.bio,
+            location: parsedProfile.address || prev.location,
+            profilePicture: parsedProfile.profilePictureUrl || parsedProfile.profilePicture,
+            // Map additional fields from complete profile
+            gender: parsedProfile.gender,
+            dateOfBirth: parsedProfile.dateOfBirth,
+            username: parsedProfile.username,
+            isProfileComplete: parsedProfile.isProfileComplete,
+            profileCompletedAt: parsedProfile.profileCompletedAt
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading saved profile:', error);
+      }
+    };
+
+    loadSavedProfile();
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProfileData(prev => ({
@@ -181,7 +215,7 @@ const Profile = () => {
 
               <div className="flex gap-3 mt-6">
                 <button
-                  onClick={() => setIsEditing(true)}
+                  onClick={() => navigate('/profile/edit')}
                   className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
                 >
                   <Edit3 size={18} />

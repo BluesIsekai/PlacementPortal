@@ -4,6 +4,9 @@ import Register from './pages/Register.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Settings from './pages/Settings.jsx'
 import Profile from './pages/Profile.jsx'
+import EditProfile from './pages/EditProfile.jsx'
+// import CompleteProfile from './pages/CompleteProfile.jsx'
+import CompleteProfile from './pages/CompleteProfile_Simple.jsx'
 import Notifications from './pages/Notifications.jsx'
 import Quizzes from './pages/Quizzes.jsx'
 import ProgressReport from "./pages/ProgressReport"
@@ -25,6 +28,8 @@ const AppRoutes = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/profile/edit" element={<EditProfile />} />
+      <Route path="/complete-profile" element={<CompleteProfile />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/quizzes" element={<Quizzes />} />
       <Route path="/companies" element={<Companies />} />

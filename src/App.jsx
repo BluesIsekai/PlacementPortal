@@ -1,4 +1,5 @@
 import AppRoutes from './routes.jsx'
+import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 import { QuizProvider } from './context/QuizContext.jsx'
 
@@ -7,7 +8,9 @@ export default function App() {
     <ThemeProvider>
       <QuizProvider>
         <div className="min-h-screen bg-white text-slate-900">
-          <AppRoutes />
+          <ProtectedRoute>
+            <AppRoutes />
+          </ProtectedRoute>
         </div>
       </QuizProvider>
     </ThemeProvider>
