@@ -99,7 +99,7 @@ const DriveItem = ({ company, date, time, type, status }) => {
   );
 };
 
-const ActionCard = ({ icon, title, desc, btn }) => {
+const ActionCard = ({ icon, title, desc, btn, onClick }) => {
   const theme = useTheme();
   return (
     <div className={`rounded-2xl ${theme.border.primary} ${theme.bg.card} p-4 ${theme.border.hover} transition-all duration-300 group ${theme.shadow.card} border`}>
@@ -109,7 +109,11 @@ const ActionCard = ({ icon, title, desc, btn }) => {
       </div>
       <p className={`text-sm ${theme.text.tertiary}`}>{desc}</p>
       <div className="mt-3">
-        <button className={`rounded-lg ${theme.border.primary} ${theme.button.secondary} px-3 py-1.5 text-sm transition-colors group-hover:bg-indigo-600 group-hover:border-indigo-600 group-hover:text-white border`}>
+        <button
+          type="button"
+          onClick={onClick}
+          className={`rounded-lg ${theme.border.primary} ${theme.button.secondary} px-3 py-1.5 text-sm transition-colors group-hover:bg-indigo-600 group-hover:border-indigo-600 group-hover:text-white border`}
+        >
           {btn} <ChevronRight size={14} className="inline-block ml-1 group-hover:translate-x-1 transition-transform" />
         </button>
       </div>
@@ -655,7 +659,13 @@ const PlacementPortalDashboard = () => {
           {/* Quick actions */}
           <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             <ActionCard icon={<Code2 size={18} />} title="Practice Coding" desc="Filter by difficulty & topic" btn="Browse" />
-            <ActionCard icon={<FileText size={18} />} title="Take a Quiz" desc="Timed with instant scorecard" btn="Start" />
+            <ActionCard
+              icon={<FileText size={18} />}
+              title="Take a Quiz"
+              desc="Timed with instant scorecard"
+              btn="Start"
+              onClick={() => navigate("/quizzes")}
+            />
             <ActionCard icon={<Building2 size={18} />} title="Explore Companies" desc="Interview experiences & Qs" btn="Explore" />
           </section>
 
