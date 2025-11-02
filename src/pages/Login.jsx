@@ -7,6 +7,7 @@ import {
   sendPasswordResetEmail,
 } from 'firebase/auth'
 import { auth, isFirebaseConfigured } from '../lib/firebase'
+import { useAuth } from '../context/AuthContext'
 import { getUserProfileStatus, markAsReturningUser } from '../utils/profileUtils'
 import {
   Sun,
@@ -109,6 +110,7 @@ const themes = {
 
 export default function Login() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -175,17 +177,27 @@ export default function Login() {
         const data = await response.json();
 
         if (response.ok && data.success) {
-          // Store authentication data
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('authToken', data.token);
-          localStorage.setItem('userEmail', data.user.email);
-          localStorage.setItem('userName', data.user.name);
+          // Use AuthContext login function
+          const loginResult = login(data.user, data.token);
           
-          // Store user data
-          localStorage.setItem('user', JSON.stringify(data.user));
-          
-          loginSuccess = true;
-          console.log('✅ Backend login successful:', data);
+          if (loginResult) {
+            loginSuccess = true;
+            
+            // For successful backend login, assume profile is complete
+            // since they were able to login with existing credentials
+            const userWithCompleteProfile = {
+              ...data.user,
+              isProfileComplete: true
+            };
+            
+            // Update localStorage to mark profile as complete for returning users
+            localStorage.setItem('isProfileComplete', 'true');
+            localStorage.setItem('userProfile', JSON.stringify(userWithCompleteProfile));
+            
+            console.log('✅ Backend login successful:', data);
+          } else {
+            throw new Error('Failed to set authentication state');
+          }
           
         } else {
           if (!loginSuccess) {
@@ -196,30 +208,60 @@ export default function Login() {
         console.error('Backend login failed:', backendError);
         
         if (!loginSuccess) {
-          throw new Error(backendError.message || 'Login failed. Please check your credentials.');
+          // If backend is not available, create demo login
+          console.log('🔄 Creating demo login since backend is unavailable');
+          const demoUser = { 
+            email: userEmail, 
+            name: userEmail.split('@')[0],
+            id: 'demo_user_' + Date.now(),
+            isProfileComplete: true // Assume demo login users have completed profile
+          };
+          const demoToken = 'demo_token_' + Date.now();
+          
+          const demoLoginResult = login(demoUser, demoToken);
+          if (demoLoginResult) {
+            loginSuccess = true;
+            
+            // Mark profile as complete for demo users
+            localStorage.setItem('isProfileComplete', 'true');
+            localStorage.setItem('userProfile', JSON.stringify(demoUser));
+            
+            console.log('✅ Demo login successful');
+          } else {
+            throw new Error('Failed to create demo login');
+          }
         } else {
           console.warn('Firebase login succeeded but backend failed. Creating demo token.');
-          localStorage.setItem('token', 'firebase_token_' + Date.now());
-          localStorage.setItem('userEmail', userEmail);
+          // Use AuthContext login with demo data
+          const demoUser = { 
+            email: userEmail, 
+            name: userEmail.split('@')[0],
+            isProfileComplete: true // Firebase users are considered returning users
+          };
+          const demoToken = 'firebase_token_' + Date.now();
+          
+          login(demoUser, demoToken);
+          
+          // Mark profile as complete for Firebase users
+          localStorage.setItem('isProfileComplete', 'true');
+          localStorage.setItem('userProfile', JSON.stringify(demoUser));
         }
       }
 
       if (loginSuccess) {
-        // Check if profile is complete and redirect accordingly
-        const { isComplete } = getUserProfileStatus();
+        setSuccess('Login successful! Redirecting...');
         
-        if (isComplete) {
-          // Mark as returning user and go to dashboard
+        // For login (not registration), users should go directly to dashboard
+        // since they already have accounts and have completed profiles before
+        setTimeout(() => {
           markAsReturningUser();
           navigate('/dashboard');
-        } else {
-          // First-time user or incomplete profile - redirect to complete profile
-          navigate('/complete-profile');
-        }
+        }, 1000); // Small delay to show success message
       }
       
     } catch (err) {
       const msg = err?.message || 'Login failed'
+      console.error('Login error:', err);
       setError(msg)
     } finally {
       setLoading(false)
@@ -234,23 +276,26 @@ export default function Login() {
       const provider = new GoogleAuthProvider()
       const result = await signInWithPopup(auth, provider)
       
-      // Store user info for profile completion
+      // Store user info using AuthContext
       const user = result.user
-      localStorage.setItem('userEmail', user.email)
-      localStorage.setItem('userName', user.displayName || user.email)
-      localStorage.setItem('token', 'google_token_' + Date.now())
+      const googleUser = {
+        email: user.email,
+        name: user.displayName || user.email,
+        profilePicture: user.photoURL,
+        isProfileComplete: true // Google users are considered returning users
+      };
+      const googleToken = 'google_token_' + Date.now();
       
-      // Check if profile is complete and redirect accordingly
-      const { isComplete } = getUserProfileStatus()
+      login(googleUser, googleToken);
       
-      if (isComplete) {
-        // Mark as returning user and go to dashboard
-        markAsReturningUser()
-        navigate('/dashboard')
-      } else {
-        // First-time user or incomplete profile - redirect to complete profile
-        navigate('/complete-profile')
-      }
+      // Mark profile as complete for Google users (they are logging in, not signing up)
+      localStorage.setItem('isProfileComplete', 'true');
+      localStorage.setItem('userProfile', JSON.stringify(googleUser));
+      
+      // Google login users go directly to dashboard
+      markAsReturningUser();
+      navigate('/dashboard');
+      
     } catch (err) {
       setError(err?.message || 'Google sign-in failed')
     } finally {

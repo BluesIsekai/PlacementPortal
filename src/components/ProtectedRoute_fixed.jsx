@@ -23,29 +23,16 @@ const ProtectedRoute = ({ children }) => {
           const { isComplete } = getUserProfileStatus();
           const currentPath = location.pathname;
           
-          // Only redirect to complete-profile if explicitly coming from registration
-          // or if the user is specifically trying to access /complete-profile
-          const isFromRegistration = sessionStorage.getItem('fromRegistration') === 'true';
-          const isExplicitlyGoingToCompleteProfile = currentPath === '/complete-profile';
-          
           // Pages that don't require profile completion or authentication
           const publicPaths = ['/complete-profile', '/login', '/register', '/', '/features'];
           const protectedPaths = ['/dashboard', '/profile', '/settings', '/notifications', '/quizzes', '/companies', '/coding', '/reports', '/schedule', '/progress-report', '/search', '/explore'];
           
-          // Only redirect to complete profile if:
-          // 1. Profile is incomplete AND
-          // 2. User is coming from registration OR explicitly going to complete-profile
-          if (protectedPaths.includes(currentPath) && !isComplete && isFromRegistration) {
+          if (protectedPaths.includes(currentPath) && !isComplete) {
             setAuthState({
               isAuthenticated: true,
               shouldRedirectToCompleteProfile: true
             });
           } else {
-            // Clear the registration flag after checking
-            if (isFromRegistration) {
-              sessionStorage.removeItem('fromRegistration');
-            }
-            
             setAuthState({
               isAuthenticated: true,
               shouldRedirectToCompleteProfile: false

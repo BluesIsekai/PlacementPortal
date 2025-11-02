@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, Mail, X, Menu, ChevronDown, GraduationCap, Target, TrendingUp, BookOpen, Users, Award, ChevronRight, Sparkles, Star } from "lucide-react";
+import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, Mail, X, Menu, ChevronDown, GraduationCap, Target, TrendingUp, BookOpen, Users, Award, ChevronRight, Sparkles, Star, Search, Compass } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
+import SearchBar from "../components/SearchBar";
 import Footer from "./Footer";
 
 // Helper Components
@@ -242,6 +244,7 @@ const PerformanceOverview = () => {
 // Main Dashboard Component
 const PlacementPortalDashboard = () => {
   const theme = useTheme();
+  const { logout, user } = useAuth();
   const [openUser, setOpenUser] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -254,9 +257,21 @@ const PlacementPortalDashboard = () => {
     { icon: <LayoutDashboard size={18} />, label: "Dashboard", path: "/dashboard" },
     { icon: <Code2 size={18} />, label: "Coding", path: "/coding" },
     { icon: <Building2 size={18} />, label: "Companies", path: "/companies" },
+    { icon: <Search size={18} />, label: "Search Users", path: "/search" },
+    { icon: <Compass size={18} />, label: "Explore Profiles", path: "/explore" },
     { icon: <FileText size={18} />, label: "Practice Quizzes", path: "/quizzes" },
     { icon: <BarChart3 size={18} />, label: "Report", path: "/reports" },
   ];
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // logout function already handles navigation to landing page
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   // Reset loading state when location changes
   useEffect(() => {
@@ -326,7 +341,15 @@ const PlacementPortalDashboard = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {/* Search Bar - Hidden on mobile */}
+            <div className="hidden md:block">
+              <SearchBar 
+                placeholder="Search users..." 
+                className="w-64"
+              />
+            </div>
+
             <button
               className={`inline-flex items-center gap-2 rounded-lg ${theme.border.primary} ${theme.button.secondary} px-3 py-1.5 text-sm transition-all duration-300 hover:scale-105 border`}
               aria-label="Toggle theme"
@@ -368,7 +391,10 @@ const PlacementPortalDashboard = () => {
                     <User size={16} /> Profile
                   </Link>
                   <div className={`h-px ${theme.border.primary}`} />
-                  <button className={`flex w-full items-center gap-2 px-3 py-2 text-sm text-rose-400 ${theme.bg.hover} transition-colors`}>
+                  <button 
+                    onClick={handleLogout}
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-sm text-rose-400 ${theme.bg.hover} transition-colors`}
+                  >
                     <LogOut size={16} /> Logout
                   </button>
                 </div>

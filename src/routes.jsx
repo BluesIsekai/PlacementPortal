@@ -4,6 +4,7 @@ import Register from './pages/Register.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Settings from './pages/Settings.jsx'
 import Profile from './pages/Profile.jsx'
+import UserProfile from './pages/UserProfile.jsx'
 import EditProfile from './pages/EditProfile.jsx'
 // import CompleteProfile from './pages/CompleteProfile.jsx'
 import CompleteProfile from './pages/CompleteProfile_Simple.jsx'
@@ -16,6 +17,8 @@ import Landing from './pages/Landing.jsx'
 import Features from './pages/Features.jsx'
 import Reports from './pages/Reports.jsx'
 import Schedule from './pages/Schedule.jsx'
+import Search from './pages/Search.jsx'
+import ExploreProfiles from './pages/ExploreProfiles.jsx'
 import { stats, quizzes } from "./data/quizData"
 
 const AppRoutes = () => {
@@ -28,12 +31,15 @@ const AppRoutes = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/profile/:userId" element={<UserProfile />} />
       <Route path="/profile/edit" element={<EditProfile />} />
       <Route path="/complete-profile" element={<CompleteProfile />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/quizzes" element={<Quizzes />} />
       <Route path="/companies" element={<Companies />} />
       <Route path="/coding" element={<Coding />} />
+      <Route path="/search" element={<Search />} />
+      <Route path="/explore" element={<ExploreProfiles />} />
       <Route path="/reports" element={<Reports />} />
       <Route path="/schedule" element={<Schedule />} />
       <Route

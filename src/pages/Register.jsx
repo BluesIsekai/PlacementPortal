@@ -202,16 +202,12 @@ export default function Register() {
           
           setSuccess('🎉 Registration successful! Redirecting...');
           
-          // Check if profile is complete and redirect accordingly
-          const { isComplete } = getUserProfileStatus();
+          // Set flag to indicate user is coming from registration
+          sessionStorage.setItem('fromRegistration', 'true');
           
+          // New users need to complete their profile
           setTimeout(() => {
-            if (isComplete) {
-              navigate('/dashboard');
-            } else {
-              // New users need to complete their profile
-              navigate('/complete-profile');
-            }
+            navigate('/complete-profile');
           }, 1500);
           
         } else {
@@ -231,6 +227,9 @@ export default function Register() {
           localStorage.setItem('userName', userName);
           
           setSuccess('🎉 Registration successful! Redirecting...');
+          
+          // Set flag to indicate user is coming from registration
+          sessionStorage.setItem('fromRegistration', 'true');
           
           setTimeout(() => {
             navigate('/complete-profile');

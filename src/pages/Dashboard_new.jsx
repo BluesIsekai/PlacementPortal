@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, Mail, X, Menu, ChevronDown, GraduationCap, Target, TrendingUp, BookOpen, Users, Award, ChevronRight, Sparkles, Star } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
 import Footer from "./Footer";
 
 // Helper Components
@@ -238,6 +239,7 @@ const PerformanceOverview = () => {
 // Main Dashboard Component
 const PlacementPortalDashboard = () => {
   const theme = useTheme();
+  const { logout, user } = useAuth();
   const [openUser, setOpenUser] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -253,6 +255,16 @@ const PlacementPortalDashboard = () => {
     { icon: <FileText size={18} />, label: "Practice Quizzes", path: "/quizzes" },
     { icon: <BarChart3 size={18} />, label: "Report", path: "/reports" },
   ];
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // logout function already handles navigation to landing page
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   // Reset loading state when location changes
   useEffect(() => {
@@ -364,7 +376,10 @@ const PlacementPortalDashboard = () => {
                     <User size={16} /> Profile
                   </Link>
                   <div className={`h-px ${theme.border.primary}`} />
-                  <button className={`flex w-full items-center gap-2 px-3 py-2 text-sm text-rose-400 ${theme.bg.hover} transition-colors`}>
+                  <button 
+                    onClick={handleLogout}
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-sm text-rose-400 ${theme.bg.hover} transition-colors`}
+                  >
                     <LogOut size={16} /> Logout
                   </button>
                 </div>

@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const User = require('../models/User');
 
 // Simple test endpoint
 router.get('/test', (req, res) => {
@@ -464,6 +465,87 @@ router.get('/profile', async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+// @route   GET /api/users/:userId
+// @desc    Get user profile by ID
+// @access  Public
+router.get('/users/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Find user by ID
+    const user = await User.findById(userId)
+      .select('-password -firebaseUid') // Exclude sensitive information
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Check if profile is public or user has permission to view
+    if (user.preferences?.profileVisibility === 'private') {
+      return res.status(403).json({
+        success: false,
+        message: 'This profile is private'
+      });
+    }
+
+    // Format user data for response
+    const userProfile = {
+      id: user._id,
+      name: user.name,
+      username: user.username,
+      email: user.email,
+      role: user.role || 'Competitor',
+      bio: user.bio || '',
+      profilePic: user.profilePic || null,
+      college: user.college || '',
+      department: user.department || '',
+      degree: user.degree || '',
+      year: user.year || '',
+      city: user.city || '',
+      skills: user.skills || [],
+      interests: user.interests || [],
+      socialLinks: user.socialLinks || {},
+      stats: user.stats || {
+        problemsSolved: 0,
+        contestsParticipated: 0,
+        ranking: 'Beginner',
+        menteeCount: 0,
+        rating: 0
+      },
+      profile: user.profile || {},
+      joinedDate: user.createdAt,
+      experience: user.profile?.experience || 'Not specified',
+      achievements: user.profile?.achievements || [],
+      projects: user.profile?.projects || []
+    };
+
+    res.json({
+      success: true,
+      user: userProfile
+    });
+
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    
+    // Handle invalid ObjectId
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user ID format'
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: 'Internal server error'
