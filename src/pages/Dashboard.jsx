@@ -1,7 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
-import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, Mail, X, Menu, ChevronDown, GraduationCap, Target, TrendingUp, BookOpen, Users, Award, ChevronRight, Sparkles, Star } from "lucide-react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, Mail, X, Menu, ChevronDown, GraduationCap, Target, TrendingUp, BookOpen, Users, Award, ChevronRight, Sparkles, Star, CheckCircle } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+import { useUserData } from "../context/UserDataContext";
 import Footer from "./Footer";
 
 // Helper Components
@@ -17,7 +18,7 @@ const GoalProgress = ({ title, completed, total }) => {
       </div>
       <div className={`h-2 ${theme.bg.secondary} rounded-full`}>
         <div 
-          className="h-2 bg-gradient-to-r from-green-500 to-teal-600 rounded-full" 
+          className="h-2 bg-linear-to-r from-green-500 to-teal-600 rounded-full"
           style={{ width: `${percentage}%` }}
         ></div>
       </div>
@@ -68,7 +69,7 @@ const SkillProgressItem = ({ skill, progress, level }) => {
       </div>
       <div className={`h-2 ${theme.bg.secondary} rounded-full`}>
         <div 
-          className="h-2 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full transition-all duration-500" 
+          className="h-2 bg-linear-to-r from-indigo-500 to-violet-600 rounded-full transition-all duration-500"
           style={{ width: `${progress}%` }}
         ></div>
       </div>
@@ -166,7 +167,7 @@ const InterviewResources = () => {
             <p className={`text-xs ${theme.text.tertiary} mb-3`}>{resource.desc}</p>
             <div className={`h-2 ${theme.bg.secondary} rounded-full mb-1`}>
               <div 
-                className="h-2 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full" 
+                className="h-2 bg-linear-to-r from-indigo-500 to-violet-600 rounded-full"
                 style={{ width: `${resource.progress}%` }}
               ></div>
             </div>
@@ -193,7 +194,7 @@ const PerformanceOverview = () => {
             {[40, 65, 50, 75, 60, 80, 70].map((height, index) => (
               <div key={index} className="flex flex-col items-center">
                 <div 
-                  className="w-6 bg-gradient-to-t from-indigo-500 to-violet-600 rounded-t"
+                  className="w-6 bg-linear-to-t from-indigo-500 to-violet-600 rounded-t"
                   style={{ height: `${height}%` }}
                 ></div>
                 <span className={`text-xs ${theme.text.muted} mt-1`}>{['M', 'T', 'W', 'T', 'F', 'S', 'S'][index]}</span>
@@ -238,6 +239,7 @@ const PerformanceOverview = () => {
 // Main Dashboard Component
 const PlacementPortalDashboard = () => {
   const theme = useTheme();
+  const { user, userData, loadingUser, loadingUserData } = useUserData();
   const [openUser, setOpenUser] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -253,6 +255,116 @@ const PlacementPortalDashboard = () => {
     { icon: <FileText size={18} />, label: "Documents", path: "/quizzes" },
     { icon: <BarChart3 size={18} />, label: "Analytics", path: "/reports" },
   ];
+
+  const defaultStats = { totalSolved: 0, easySolved: 0, mediumSolved: 0, hardSolved: 0 };
+  const stats = userData?.stats || defaultStats;
+  const submissions = userData?.submissions || [];
+  const completedProblems = userData?.completedProblems || {};
+  const completedProblemsList = useMemo(
+    () => Object.values(completedProblems || {}),
+    [completedProblems],
+  );
+
+  const toDate = (value) => {
+    if (!value) return null;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  };
+
+  const isSameDay = (a, b) => {
+    const first = toDate(a);
+    const second = toDate(b);
+    if (!first || !second) return false;
+    return (
+      first.getFullYear() === second.getFullYear() &&
+      first.getMonth() === second.getMonth() &&
+      first.getDate() === second.getDate()
+    );
+  };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const weekAgo = new Date(today);
+  weekAgo.setDate(weekAgo.getDate() - 7);
+
+  const solvedToday = completedProblemsList.filter((entry) =>
+    entry?.solvedAt ? isSameDay(entry.solvedAt, today) : false,
+  ).length;
+  const solvedLast7Days = completedProblemsList.filter((entry) => {
+    const solvedAt = toDate(entry?.solvedAt);
+    return solvedAt && solvedAt >= weekAgo;
+  }).length;
+
+  const totalSolved = stats.totalSolved ?? completedProblemsList.length;
+  const totalSubmissions = submissions.length;
+  const passedSubmissions = submissions.filter((submission) => submission.status === "passed").length;
+  const acceptanceRate = totalSubmissions
+    ? Math.round((passedSubmissions / totalSubmissions) * 100)
+    : 0;
+  const submissionsLast7Days = submissions.filter((submission) => {
+    const submittedAt = toDate(submission?.submittedAt);
+    return submittedAt && submittedAt >= weekAgo;
+  }).length;
+  const todaySubmissions = submissions.filter((submission) =>
+    isSameDay(submission?.submittedAt, today),
+  ).length;
+
+  const currentStreak = useMemo(() => {
+    if (!submissions.length) return 0;
+    const uniqueDays = new Set();
+    submissions.forEach((submission) => {
+      const submittedAt = toDate(submission?.submittedAt);
+      if (submittedAt) {
+        submittedAt.setHours(0, 0, 0, 0);
+        uniqueDays.add(submittedAt.getTime());
+      }
+    });
+
+    let streak = 0;
+    let cursor = new Date();
+    cursor.setHours(0, 0, 0, 0);
+    const dayMs = 24 * 60 * 60 * 1000;
+    while (uniqueDays.has(cursor.getTime())) {
+      streak += 1;
+      cursor = new Date(cursor.getTime() - dayMs);
+    }
+    return streak;
+  }, [submissions]);
+
+  const sortedSubmissions = useMemo(() => {
+    if (!submissions.length) return [];
+    return [...submissions].sort((a, b) => {
+      const aDate = toDate(a?.submittedAt)?.getTime() || 0;
+      const bDate = toDate(b?.submittedAt)?.getTime() || 0;
+      return bDate - aDate;
+    });
+  }, [submissions]);
+  const recentActivity = sortedSubmissions.slice(0, 4);
+
+  const formatRelativeTime = (value) => {
+    const date = toDate(value);
+    if (!date) return "";
+    const diffMs = Date.now() - date.getTime();
+    const diffSeconds = Math.floor(diffMs / 1000);
+    if (diffSeconds < 60) return `${diffSeconds}s ago`;
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  const DAILY_GOAL = 3;
+  const SUBMISSION_GOAL = 5;
+  const WEEKLY_GOAL = 10;
+
+  const codingGoalCompleted = Math.min(solvedToday, DAILY_GOAL);
+  const submissionGoalCompleted = Math.min(todaySubmissions, SUBMISSION_GOAL);
+  const weeklyGoalCompleted = Math.min(solvedLast7Days, WEEKLY_GOAL);
+
+  const userName = user?.displayName || (user?.email ? user.email.split("@")[0] : "Guest");
 
   // Reset loading state when location changes
   useEffect(() => {
@@ -278,13 +390,43 @@ const PlacementPortalDashboard = () => {
 
   // Stats for the dashboard
   const dashboardStats = [
-    { title: "Coding Streak", value: "12 days", icon: <TrendingUp size={16} />, change: "+3", positive: true },
-    { title: "Avg Quiz Score", value: "76%", icon: <BarChart3 size={16} />, change: "+5%", positive: true },
-    { title: "Applications", value: "27", icon: <Mail size={16} />, change: "+8", positive: true },
-    { title: "Skills Mastered", value: "18/30", icon: <Award size={16} />, change: "+4", positive: true },
+    {
+      title: "Problems Solved",
+      value: totalSolved,
+      icon: <Code2 size={16} />,
+      change: solvedLast7Days ? `+${solvedLast7Days} last 7d` : null,
+      positive: solvedLast7Days > 0,
+    },
+    {
+      title: "Acceptance Rate",
+      value: `${acceptanceRate}%`,
+      icon: <TrendingUp size={16} />,
+      change: totalSubmissions ? `${passedSubmissions}/${totalSubmissions} passed` : null,
+      positive: acceptanceRate >= 50,
+    },
+    {
+      title: "Total Submissions",
+      value: totalSubmissions,
+      icon: <FileText size={16} />,
+      change: submissionsLast7Days
+        ? `${submissionsLast7Days} last 7d`
+        : todaySubmissions
+          ? `${todaySubmissions} today`
+          : null,
+      positive: submissionsLast7Days > 0 || todaySubmissions > 0,
+    },
+    {
+      title: "Current Streak",
+      value: `${currentStreak} day${currentStreak === 1 ? "" : "s"}`,
+      icon: <Target size={16} />,
+      change: currentStreak ? "Active" : null,
+      positive: currentStreak > 0,
+    },
   ];
 
-  if (isLoading) {
+  const isDataLoading = isLoading || loadingUser || loadingUserData;
+
+  if (isDataLoading) {
     return (
       <div className={`min-h-screen ${theme.bg.primary} flex items-center justify-center`}>
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
@@ -306,7 +448,7 @@ const PlacementPortalDashboard = () => {
               <Menu size={24} />
             </button>
             <div className="flex items-center gap-3">
-              <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-violet-600 ring-1 ring-white/10 grid place-content-center font-bold">
+              <div className="relative h-10 w-10 rounded-xl bg-linear-to-br from-indigo-500 via-purple-500 to-violet-600 ring-1 ring-white/10 grid place-content-center font-bold">
                 <div className="relative flex flex-col items-center justify-center">
                   <GraduationCap className="text-yellow-300" size={16} />
                   <div className="text-white font-black text-sm" style={{ textShadow: '0 0 6px rgba(255,255,255,0.5)', fontFamily: 'monospace', lineHeight: '0.5', marginTop: '-1px', letterSpacing: '0.5px' }}>
@@ -476,13 +618,13 @@ const PlacementPortalDashboard = () => {
       )}
 
       {/* Main Content */}
-      <div className="mx-auto max-w-7xl px-4 py-6 flex-grow">
+  <div className="mx-auto max-w-7xl px-4 py-6 grow">
         <main className="space-y-6">
           {/* Dashboard Header with Tabs */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className={`text-2xl font-bold ${theme.text.primary}`}>Dashboard Overview</h1>
-              <p className={theme.text.tertiary}>Welcome back, Kunj! Here's your placement preparation status.</p>
+              <p className={theme.text.tertiary}>Welcome back, {userName}! Here's your placement preparation status.</p>
             </div>
             
             <div className={`flex ${theme.bg.secondary} rounded-lg p-1 ${theme.border.primary} border`}>
@@ -510,9 +652,11 @@ const PlacementPortalDashboard = () => {
                   <div className={`p-2 ${theme.bg.tertiary} rounded-lg group-hover:bg-indigo-500/20 transition-colors`}>
                     {stat.icon}
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${stat.positive ? 'bg-green-900/30 text-green-400' : 'bg-rose-900/30 text-rose-400'}`}>
-                    {stat.change}
-                  </span>
+                  {stat.change && (
+                    <span className={`text-xs px-2 py-1 rounded-full ${stat.positive ? 'bg-green-900/30 text-green-400' : 'bg-rose-900/30 text-rose-400'}`}>
+                      {stat.change}
+                    </span>
+                  )}
                 </div>
                 <h3 className={`text-2xl font-bold mb-1 ${theme.text.primary}`}>{stat.value}</h3>
                 <p className={`text-sm ${theme.text.tertiary}`}>{stat.title}</p>
@@ -527,9 +671,9 @@ const PlacementPortalDashboard = () => {
 
             {/* Progress section */}
             <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-3">
-              <GoalProgress title="Coding Problems" completed={5} total={10} />
-              <GoalProgress title="Quiz Attempts" completed={1} total={2} />
-              <GoalProgress title="Company Research" completed={2} total={5} />
+              <GoalProgress title="Problems Solved Today" completed={codingGoalCompleted} total={Math.max(DAILY_GOAL, 1)} />
+              <GoalProgress title="Submissions Today" completed={submissionGoalCompleted} total={Math.max(SUBMISSION_GOAL, 1)} />
+              <GoalProgress title="Weekly Solves" completed={weeklyGoalCompleted} total={Math.max(WEEKLY_GOAL, 1)} />
             </div>
 
             {/* Motivational quote */}
@@ -547,10 +691,27 @@ const PlacementPortalDashboard = () => {
             {/* Recent Activity */}
             <div className="lg:col-span-2 space-y-4">
               <Card title="Recent Activity" action={<button className={`text-xs ${theme.text.accent} hover:text-indigo-500`}>View All</button>}>
-                <ActivityItem icon={<Code2 size={16} />} title="Solved 3 Medium DSA questions" meta="Today • 14:20" badge="+10 XP" />
-                <ActivityItem icon={<FileText size={16} />} title="Quiz: DBMS Basics submitted" meta="Yesterday • Score 82%" badge="+15 XP" />
-                <ActivityItem icon={<Building2 size={16} />} title="Applied for Microsoft SWE role" meta="22 Aug • 18:05" badge="Applied" />
-                <ActivityItem icon={<Mail size={16} />} title="Received response from Amazon" meta="21 Aug • 09:30" badge="Response" />
+                {recentActivity.length === 0 ? (
+                  <p className={`text-sm ${theme.text.tertiary}`}>No activity yet. Submit a solution to see it appear here.</p>
+                ) : (
+                  recentActivity.map((submission, idx) => {
+                    const passedCount = submission?.testResults?.filter((result) => result.passed).length || 0;
+                    const totalTests = submission?.testResults?.length || 0;
+                    const statusSuccess = submission?.status === "passed";
+                    const relativeTime = formatRelativeTime(submission.submittedAt);
+                    const absoluteTime = toDate(submission?.submittedAt)?.toLocaleString() || "Unknown";
+                    const timestampLabel = relativeTime || absoluteTime;
+                    return (
+                      <ActivityItem
+                        key={`${submission.problemId}-${submission.submittedAt || idx}`}
+                        icon={statusSuccess ? <CheckCircle size={16} className="text-green-400" /> : <Code2 size={16} className="text-indigo-400" />}
+                        title={submission.problemTitle || "Submission"}
+                        meta={`${timestampLabel} • ${submission.language || "n/a"}`}
+                        badge={statusSuccess ? "+Solved" : `${passedCount}/${totalTests} tests`}
+                      />
+                    );
+                  })
+                )}
               </Card>
 
               <Card title="Company-wise Questions">
@@ -570,7 +731,7 @@ const PlacementPortalDashboard = () => {
                       </div>
                       <div className={`h-1.5 ${theme.bg.secondary} rounded-full`}>
                         <div 
-                          className="h-1.5 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full" 
+                          className="h-1.5 bg-linear-to-r from-indigo-500 to-violet-600 rounded-full"
                           style={{ width: `${c.progress}%` }}
                         ></div>
                       </div>
