@@ -1,5 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
+import { getFirestore } from 'firebase/firestore'
 
 // Vite env vars must be prefixed with VITE_
 const firebaseConfig = {
@@ -15,11 +16,13 @@ export const isFirebaseConfigured = Boolean(firebaseConfig.apiKey)
 
 let app = null
 let auth = null
+let db = null
 
 if (isFirebaseConfigured) {
   app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig)
   auth = getAuth(app)
+  db = getFirestore(app)
 }
 
-export { auth }
+export { auth, db }
 export default app

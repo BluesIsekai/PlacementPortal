@@ -7,10 +7,52 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
+import { loadUserProfile, saveUserProfile } from "../utils/profileUtils";
+import { isFirebaseConfigured } from "../lib/firebase";
+
+const createDefaultFormData = () => {
+  const storedEmail = typeof window !== "undefined"
+    ? window.localStorage.getItem("userEmail") || "john.doe@example.com"
+    : "john.doe@example.com";
+
+  return {
+    profilePicture: null,
+    profilePictureUrl: "",
+    fullName: "John Doe",
+    username: "johndoe",
+    email: storedEmail,
+    phone: "+1 (555) 123-4567",
+    dateOfBirth: "1999-05-15",
+    gender: "male",
+    bio: "Passionate computer science student with interest in web development and machine learning. Actively preparing for campus placements.",
+    address: {
+      street: "123 Main Street",
+      city: "New York",
+      state: "NY",
+      zipCode: "10001",
+    },
+    website: "https://johndoe.dev",
+    socialMedia: {
+      instagram: "https://instagram.com/johndoe",
+      linkedin: "https://linkedin.com/in/johndoe",
+      twitter: "https://twitter.com/johndoe",
+      github: "https://github.com/johndoe",
+    },
+    skills: "JavaScript, React, Node.js, Python, Machine Learning",
+    occupation: "Computer Science Student",
+    education: "Bachelor's in Computer Science",
+    company: "University College",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  };
+};
 
 const EditProfile = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const { user } = useAuth();
   const fileInputRef = useRef(null);
   
   const [showSuccess, setShowSuccess] = useState(false);
@@ -20,84 +62,143 @@ const EditProfile = () => {
   const [profilePreview, setProfilePreview] = useState(null);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [backendConnected, setBackendConnected] = useState(false);
+  const [cloudSyncReady, setCloudSyncReady] = useState(isFirebaseConfigured);
+  const [cloudSyncWarning, setCloudSyncWarning] = useState(!isFirebaseConfigured);
+  const [profileLoading, setProfileLoading] = useState(true);
 
-  const [formData, setFormData] = useState({
-    profilePicture: null,
-    fullName: "John Doe",
-    username: "johndoe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567",
-    dateOfBirth: "1999-05-15",
-    gender: "male",
-    bio: "Passionate computer science student with interest in web development and machine learning. Actively preparing for campus placements.",
-    address: {
-      street: "123 Main Street",
-      city: "New York",
-      state: "NY",
-      zipCode: "10001"
-    },
-    website: "https://johndoe.dev",
-    socialMedia: {
-      instagram: "https://instagram.com/johndoe",
-      linkedin: "https://linkedin.com/in/johndoe",
-      twitter: "https://twitter.com/johndoe",
-      github: "https://github.com/johndoe"
-    },
-    skills: "JavaScript, React, Node.js, Python, Machine Learning",
-    occupation: "Computer Science Student",
-    education: "Bachelor's in Computer Science",
-    company: "University College",
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: ""
-  });
+  const [formData, setFormData] = useState(() => createDefaultFormData());
 
-  // Load existing profile data (this would typically come from an API call)
+  const mergeFormState = (previous, incoming, fallbackEmail) => {
+    const safeIncoming = incoming || {};
+    const mergedAddress = {
+      ...(previous.address || {}),
+      ...(typeof safeIncoming.address === "object" && safeIncoming.address ? safeIncoming.address : {}),
+    };
+    const mergedSocial = {
+      ...(previous.socialMedia || {}),
+      ...(typeof safeIncoming.socialMedia === "object" && safeIncoming.socialMedia ? safeIncoming.socialMedia : {}),
+    };
+
+    return {
+      ...previous,
+      ...safeIncoming,
+      email: safeIncoming.email || fallbackEmail || previous.email,
+      address: mergedAddress,
+      socialMedia: mergedSocial,
+      profilePicture: null,
+      profilePictureUrl: safeIncoming.profilePictureUrl || previous.profilePictureUrl || "",
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    };
+  };
+
+  const buildProfilePayload = (docEmail) => {
+    const address = {
+      street: formData.address?.street || '',
+      city: formData.address?.city || '',
+      state: formData.address?.state || '',
+      zipCode: formData.address?.zipCode || '',
+    };
+
+    const socialMedia = {
+      instagram: formData.socialMedia?.instagram || '',
+      linkedin: formData.socialMedia?.linkedin || '',
+      twitter: formData.socialMedia?.twitter || '',
+      github: formData.socialMedia?.github || '',
+    };
+
+    return {
+      fullName: formData.fullName.trim(),
+      username: formData.username.trim(),
+      email: formData.email.trim() || docEmail,
+      phone: formData.phone,
+      dateOfBirth: formData.dateOfBirth,
+      gender: formData.gender,
+      bio: formData.bio,
+      address,
+      website: formData.website,
+      socialMedia,
+      skills: formData.skills,
+      occupation: formData.occupation,
+      education: formData.education,
+      company: formData.company,
+      profilePictureUrl: formData.profilePictureUrl || profilePreview || '',
+    };
+  };
+
   useEffect(() => {
-    // Ensure we have a demo token for API calls
-    if (!localStorage.getItem('token') && !localStorage.getItem('authToken')) {
-      const demoToken = 'demo-jwt-token-' + Date.now();
-      localStorage.setItem('token', demoToken);
-      console.log('Created demo token:', demoToken);
+    const ensureDemoToken = () => {
+      if (typeof window === "undefined") {
+        return;
+      }
+      if (!window.localStorage.getItem('token') && !window.localStorage.getItem('authToken')) {
+        const demoToken = 'demo-jwt-token-' + Date.now();
+        window.localStorage.setItem('token', demoToken);
+        console.log('Created demo token:', demoToken);
+      }
+    };
+
+    ensureDemoToken();
+
+    let isMounted = true;
+    const resolvedEmail = user?.email || (typeof window !== "undefined" ? window.localStorage.getItem('userEmail') : null);
+
+    if (!resolvedEmail) {
+      setProfileLoading(false);
+      setCloudSyncReady(false);
+      setCloudSyncWarning(true);
+      return () => {
+        isMounted = false;
+      };
     }
 
-    // Load saved profile data from localStorage
-    const loadProfileData = () => {
+    const hydrateProfile = async () => {
+      setProfileLoading(true);
       try {
-        const savedProfile = localStorage.getItem('userProfile');
-        if (savedProfile) {
-          const profileData = JSON.parse(savedProfile);
-          setFormData(prevData => ({
-            ...prevData,
-            ...profileData
-          }));
-          console.log('Loaded profile data from localStorage');
+        const result = await loadUserProfile(resolvedEmail);
+        if (!isMounted) {
+          return;
         }
+        if (result.profile) {
+          setFormData((prev) => mergeFormState(prev, result.profile, resolvedEmail));
+          setProfilePreview(result.profile.profilePictureUrl || null);
+        }
+        const unavailable = Boolean(result.firebaseUnavailable);
+        setCloudSyncReady(!unavailable);
+        setCloudSyncWarning(unavailable);
       } catch (error) {
-        console.error('Error loading profile data:', error);
+        if (!isMounted) {
+          return;
+        }
+        console.warn('Failed to load profile from cloud, using cached data', error);
+        setCloudSyncReady(false);
+        setCloudSyncWarning(true);
+        if (typeof window !== "undefined") {
+          try {
+            const cachedRaw = window.localStorage.getItem('userProfile');
+            if (cachedRaw) {
+              const cachedProfile = JSON.parse(cachedRaw);
+              setFormData((prev) => mergeFormState(prev, cachedProfile, resolvedEmail));
+              setProfilePreview(cachedProfile.profilePictureUrl || null);
+            }
+          } catch (parseError) {
+            console.warn('Failed to parse cached profile data', parseError);
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setProfileLoading(false);
+        }
       }
     };
 
-    // Test backend connection
-    const testBackendConnection = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/api/health');
-        if (response.ok) {
-          console.log('Backend connection successful');
-          setBackendConnected(true);
-        }
-      } catch (error) {
-        console.warn('Backend not available, using local data');
-        setBackendConnected(false);
-      }
+    hydrateProfile();
+
+    return () => {
+      isMounted = false;
     };
-    
-    loadProfileData();
-    testBackendConnection();
-    // Simulate API call to fetch user profile
-    // fetchUserProfile();
-  }, []);
+  }, [user?.email]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -160,7 +261,8 @@ const EditProfile = () => {
         setProfilePreview(e.target.result);
         setFormData(prev => ({
           ...prev,
-          profilePicture: file
+          profilePicture: file,
+          profilePictureUrl: typeof e.target.result === "string" ? e.target.result : prev.profilePictureUrl || ""
         }));
         setErrors(prev => ({
           ...prev,
@@ -246,100 +348,61 @@ const EditProfile = () => {
     }
 
     setIsLoading(true);
-    setErrors({}); // Clear previous errors
+    setErrors({});
+
+    const resolvedEmail = user?.email || (typeof window !== "undefined" ? window.localStorage.getItem('userEmail') : null);
+
+    if (!resolvedEmail && !formData.email) {
+      setErrors({ submit: 'Unable to determine your account email. Please log in again.' });
+      setIsLoading(false);
+      return;
+    }
+
+    const docEmail = resolvedEmail || formData.email;
 
     try {
-      console.log('Attempting to save profile...');
-      
-      // Get JWT token from localStorage
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken') || 'demo-token';
-      
-      // Prepare the data for submission
-      const submitData = {
-        fullName: formData.fullName,
-        username: formData.username,
-        email: formData.email,
-        phone: formData.phone,
-        dateOfBirth: formData.dateOfBirth,
-        gender: formData.gender,
-        bio: formData.bio,
-        address: formData.address,
-        website: formData.website,
-        socialMedia: formData.socialMedia,
-        skills: formData.skills,
-        occupation: formData.occupation,
-        education: formData.education,
-        company: formData.company
-      };
+      const payload = buildProfilePayload(docEmail);
+      console.log('Attempting to save profile via Firebase:', payload);
 
-      // Add password fields if password section is shown and filled
-      if (showPasswordSection && formData.currentPassword && formData.newPassword) {
-        submitData.currentPassword = formData.currentPassword;
-        submitData.newPassword = formData.newPassword;
+      const result = await saveUserProfile(docEmail, payload);
+
+      setCloudSyncReady(!result.firebaseUnavailable);
+      setCloudSyncWarning(Boolean(result.firebaseUnavailable));
+
+      setFormData((prev) => mergeFormState(prev, result.profile, docEmail));
+      setProfilePreview(result.profile.profilePictureUrl || null);
+
+      if (typeof window !== "undefined") {
+        if (payload.fullName) {
+          window.localStorage.setItem('userName', payload.fullName);
+        }
+        if (payload.email) {
+          window.localStorage.setItem('userEmail', payload.email);
+        }
+        try {
+          const storedUserRaw = window.localStorage.getItem('user');
+          const storedUser = storedUserRaw ? JSON.parse(storedUserRaw) : {};
+          const mergedUser = {
+            ...storedUser,
+            email: payload.email || storedUser.email,
+            name: payload.fullName || storedUser.name,
+            fullName: payload.fullName || storedUser.fullName,
+            bio: payload.bio || storedUser.bio,
+            isProfileComplete: true,
+          };
+          window.localStorage.setItem('user', JSON.stringify(mergedUser));
+        } catch (storageError) {
+          console.warn('Failed to update cached user info', storageError);
+        }
       }
 
-      console.log('Sending request to backend with data:', submitData);
-      
-      // Make API call to update profile
-      const response = await fetch('http://localhost:5000/api/update-profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(submitData)
-      });
-
-      console.log('Response status:', response.status);
-
-      if (response.ok) {
-        const responseData = await response.json();
-        console.log('✅ Profile updated successfully:', responseData);
-        
-        // Save to localStorage as backup
-        const profileToSave = { ...submitData };
-        delete profileToSave.currentPassword;
-        delete profileToSave.newPassword;
-        localStorage.setItem('userProfile', JSON.stringify(profileToSave));
-        
-        // Show success message
-        setShowSuccess(true);
-        
-        // Redirect to profile page after 2 seconds
-        setTimeout(() => {
-          navigate('/profile');
-        }, 2000);
-        
-      } else {
-        const errorData = await response.json();
-        console.error('❌ Server error:', errorData);
-        setErrors({ submit: errorData.message || 'Failed to update profile. Please try again.' });
-      }
-      
+      setShowSuccess(true);
+      setTimeout(() => {
+        navigate('/profile');
+      }, 1500);
     } catch (error) {
-      console.error('❌ Network error updating profile:', error);
-      
-      // Check if it's a network/connection error
-      if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
-        // Fallback: Save to localStorage for demo purposes
-        console.log('🟡 Network error detected, saving to localStorage as fallback');
-        
-        const profileToSave = { ...formData };
-        delete profileToSave.currentPassword;
-        delete profileToSave.newPassword;
-        delete profileToSave.confirmPassword;
-        
-        localStorage.setItem('userProfile', JSON.stringify(profileToSave));
-        
-        // Show success message even in offline mode
-        setShowSuccess(true);
-        setTimeout(() => {
-          navigate('/profile');
-        }, 2000);
-        
-      } else {
-        setErrors({ submit: '❌ An error occurred while updating your profile. Please check your connection and try again.' });
-      }
+      console.error('Failed to save profile data', error);
+      setErrors({ submit: error?.message || 'Failed to update profile. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -351,33 +414,45 @@ const EditProfile = () => {
 
   // Debug function to test API connection
   const testConnection = async () => {
+    const resolvedEmail = user?.email || (typeof window !== "undefined" ? window.localStorage.getItem('userEmail') : null);
+    if (!resolvedEmail) {
+      alert('No user email available. Log in again to test sync.');
+      return;
+    }
     try {
-      console.log('Testing connection to:', 'http://localhost:5000/api/health');
-      const response = await fetch('http://localhost:5000/api/health');
-      const data = await response.json();
-      console.log('Response:', data);
-      alert(`Connection test successful: ${JSON.stringify(data)}`);
-      setBackendConnected(true);
+      const result = await loadUserProfile(resolvedEmail);
+      setCloudSyncReady(!result.firebaseUnavailable);
+      setCloudSyncWarning(Boolean(result.firebaseUnavailable));
+      alert(result.firebaseUnavailable
+        ? 'Connected to local cache. Firebase sync unavailable.'
+        : 'Firebase connection successful.');
     } catch (error) {
       console.error('Connection test failed:', error);
+      setCloudSyncReady(false);
+      setCloudSyncWarning(true);
       alert(`Connection test failed: ${error.message}`);
-      setBackendConnected(false);
     }
   };
 
   // Debug function to test save functionality
-  const testSave = () => {
-    console.log('Testing save functionality...');
-    console.log('Current form data:', formData);
-    
-    // Save to localStorage
-    const profileToSave = { ...formData };
-    delete profileToSave.currentPassword;
-    delete profileToSave.newPassword;
-    delete profileToSave.confirmPassword;
-    
-    localStorage.setItem('userProfile', JSON.stringify(profileToSave));
-    alert('Profile saved to localStorage successfully!');
+  const testSave = async () => {
+    const resolvedEmail = user?.email || (typeof window !== "undefined" ? window.localStorage.getItem('userEmail') : null);
+    if (!resolvedEmail && !formData.email) {
+      alert('Cannot determine user email to save profile.');
+      return;
+    }
+    try {
+      const payload = buildProfilePayload(resolvedEmail || formData.email);
+      const result = await saveUserProfile(resolvedEmail || formData.email, payload);
+      setCloudSyncReady(!result.firebaseUnavailable);
+      setCloudSyncWarning(Boolean(result.firebaseUnavailable));
+      alert(result.firebaseUnavailable
+        ? 'Profile saved locally. Firebase sync unavailable.'
+        : 'Profile saved to Firebase successfully!');
+    } catch (error) {
+      console.error('Test save failed:', error);
+      alert(`Test save failed: ${error.message}`);
+    }
   };
 
   return (
@@ -402,11 +477,11 @@ const EditProfile = () => {
             {/* Backend Connection Status */}
             <div className="flex items-center gap-3">
               <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                backendConnected 
+                cloudSyncReady 
                   ? 'bg-green-100 text-green-800 border border-green-200' 
                   : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
               }`}>
-                {backendConnected ? '🟢 Backend Connected' : '🟡 Demo Mode'}
+                {cloudSyncReady ? '🟢 Cloud Sync Active' : '🟡 Offline Mode'}
               </div>
               <button
                 onClick={testConnection}
@@ -433,7 +508,9 @@ const EditProfile = () => {
                 ✅ Profile updated successfully!
               </span>
               <p className="text-green-600 text-sm mt-1">
-                Redirecting to your profile page...
+                {cloudSyncWarning
+                  ? 'Working offline for now. Changes will sync automatically once Firebase is reachable.'
+                  : 'Redirecting to your profile page...'}
               </p>
             </div>
           </div>
@@ -445,9 +522,9 @@ const EditProfile = () => {
             <AlertCircle className="text-red-600" size={20} />
             <div>
               <span className="text-red-800 font-medium">{errors.submit}</span>
-              {!backendConnected && (
+              {cloudSyncWarning && (
                 <p className="text-red-600 text-sm mt-1">
-                  Backend server may not be available. Using local storage as fallback.
+                  Cloud sync is currently unavailable. Changes are saved locally and will sync when Firebase is accessible.
                 </p>
               )}
             </div>

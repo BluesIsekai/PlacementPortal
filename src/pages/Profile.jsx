@@ -7,107 +7,231 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
+import { loadUserProfile } from "../utils/profileUtils";
+import { isFirebaseConfigured } from "../lib/firebase";
+
+const DEFAULT_PROFILE = Object.freeze({
+  profilePicture: null,
+  profilePictureUrl: "",
+  name: "John",
+  fullName: "John Doe",
+  email: "user@example.com",
+  phone: "+1 (555) 123-4567",
+  location: "Mumbai, India",
+  address: {
+    street: "123 Main Street",
+    city: "Mumbai",
+    state: "MH",
+    zipCode: "400001",
+  },
+  college: "Engineering College",
+  department: "Computer Science",
+  graduationYear: "2024",
+  cgpa: "9.2",
+  resumeLink: "/resume.pdf",
+  linkedin: "https://linkedin.com/in/user/example",
+  github: "https://github.com/user/example",
+  portfolio: "https://example.dev",
+  socialMedia: {
+    instagram: "https://instagram.com/user/example",
+    linkedin: "https://linkedin.com/in/user/example",
+    twitter: "https://twitter.com/user/example",
+    github: "https://github.com/user/example",
+  },
+  bio: "Passionate computer science student with interest in web development and machine learning. Actively preparing for campus placements.",
+  gender: "",
+  dateOfBirth: "",
+  username: "johndoe",
+  isProfileComplete: false,
+  stats: {
+    problemsSolved: 248,
+    quizzesTaken: 18,
+    companiesApplied: 7,
+    mockInterviews: 3,
+  },
+  skills: [
+    { name: "JavaScript", level: 90 },
+    { name: "React", level: 85 },
+    { name: "Node.js", level: 80 },
+    { name: "Python", level: 75 },
+    { name: "Java", level: 70 },
+    { name: "SQL", level: 85 },
+    { name: "HTML/CSS", level: 95 },
+    { name: "Data Structures", level: 88 },
+  ],
+  projects: [
+    {
+      name: "E-Commerce Website",
+      description: "Full-stack e-commerce platform with React and Node.js",
+      technologies: ["React", "Node.js", "MongoDB", "Express"],
+      link: "https://github.com/kunjpatel/ecommerce",
+    },
+    {
+      name: "ML Price Prediction",
+      description: "Machine learning model to predict housing prices",
+      technologies: ["Python", "Scikit-learn", "Pandas", "Matplotlib"],
+      link: "https://github.com/kunjpatel/ml-housing",
+    },
+    {
+      name: "Task Management App",
+      description: "Mobile task management application with React Native",
+      technologies: ["React Native", "Firebase", "Redux"],
+      link: "https://github.com/kunjpatel/taskapp",
+    },
+  ],
+  achievements: [
+    "Won Smart India Hackathon 2022",
+    "Google Cloud Certification",
+    "1st place in College Coding Competition",
+  ],
+});
 
 const Profile = () => {
   const navigate = useNavigate();
   const theme = useTheme();
-  
+  const { user } = useAuth();
+  const [profileData, setProfileData] = useState(() => ({ ...DEFAULT_PROFILE }));
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [cloudWarning, setCloudWarning] = useState(!isFirebaseConfigured);
+
+  const formatAddress = (address) => {
+    if (!address) return "";
+    if (typeof address === "string") return address;
+    if (typeof address === "object") {
+      const parts = [address.street, address.city, address.state, address.zipCode]
+        .map((part) => (typeof part === "string" ? part.trim() : ""))
+        .filter(Boolean);
+      return parts.join(", ");
+    }
+    return String(address);
+  };
+
+  const mergeProfileState = (previous, incoming) => {
+    if (!incoming) {
+      return previous;
+    }
+
+    const safeIncoming = { ...incoming };
+    const social =
+      typeof safeIncoming.socialMedia === "object" && safeIncoming.socialMedia
+        ? safeIncoming.socialMedia
+        : {};
+
+    const normalizeSkills = () => {
+      const rawSkills = safeIncoming.skills;
+      if (Array.isArray(rawSkills)) {
+        return rawSkills.map((skill) => {
+          if (typeof skill === "string") {
+            return { name: skill, level: 75 };
+          }
+          if (skill && typeof skill === "object") {
+            return {
+              name: skill.name || "",
+              level: typeof skill.level === "number" ? skill.level : 75,
+            };
+          }
+          return null;
+        }).filter(Boolean);
+      }
+
+      if (typeof rawSkills === "string" && rawSkills.trim()) {
+        return rawSkills
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map((name) => ({ name, level: 75 }));
+      }
+
+      return previous.skills;
+    };
+
+    return {
+      ...previous,
+      ...safeIncoming,
+      name: safeIncoming.fullName || safeIncoming.name || previous.name,
+      fullName: safeIncoming.fullName || previous.fullName,
+      email: safeIncoming.email || previous.email,
+      phone:
+        safeIncoming.phone || safeIncoming.phoneNumber || previous.phone,
+      bio: safeIncoming.bio || previous.bio,
+      location: formatAddress(safeIncoming.address) || previous.location,
+      address: safeIncoming.address || previous.address,
+      department: safeIncoming.education || previous.department,
+      college: safeIncoming.company || previous.college,
+      linkedin: social.linkedin || safeIncoming.linkedin || previous.linkedin,
+      github: social.github || safeIncoming.github || previous.github,
+      portfolio:
+        safeIncoming.website || social.portfolio || previous.portfolio,
+      socialMedia: {
+        ...(previous.socialMedia || {}),
+        ...social,
+      },
+      profilePicture:
+        safeIncoming.profilePictureUrl || safeIncoming.profilePicture || previous.profilePicture,
+      profilePictureUrl:
+        safeIncoming.profilePictureUrl || previous.profilePictureUrl,
+      skills: normalizeSkills(),
+      stats:
+        typeof safeIncoming.stats === "object" && safeIncoming.stats
+          ? { ...previous.stats, ...safeIncoming.stats }
+          : previous.stats,
+      isProfileComplete:
+        typeof safeIncoming.isProfileComplete === "boolean"
+          ? safeIncoming.isProfileComplete
+          : previous.isProfileComplete,
+      updatedAt: safeIncoming.updatedAt || previous.updatedAt,
+      lastSyncedAt:
+        safeIncoming.lastSyncedAt || previous.lastSyncedAt,
+    };
+  };
+
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [showAllSkills, setShowAllSkills] = useState(false);
   const [showAllProjects, setShowAllProjects] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
 
-  const [profileData, setProfileData] = useState({
-    name: "John",
-    email: "user@example.com",
-    phone: "+1 (555) 123-4567",
-    location: "Mumbai, India",
-    college: "Engineering College",
-    department: "Computer Science",
-    graduationYear: "2024",
-    cgpa: "9.2",
-    resumeLink: "/resume.pdf",
-    linkedin: "https://linkedin.com/in/user/exmple",
-    github: "https://github.com/user/example",
-    portfolio: "https://example.dev",
-    bio: "Passionate computer science student with interest in web development and machine learning. Actively preparing for campus placements.",
-    skills: [
-      { name: "JavaScript", level: 90 },
-      { name: "React", level: 85 },
-      { name: "Node.js", level: 80 },
-      { name: "Python", level: 75 },
-      { name: "Java", level: 70 },
-      { name: "SQL", level: 85 },
-      { name: "HTML/CSS", level: 95 },
-      { name: "Data Structures", level: 88 }
-    ],
-    projects: [
-      {
-        name: "E-Commerce Website",
-        description: "Full-stack e-commerce platform with React and Node.js",
-        technologies: ["React", "Node.js", "MongoDB", "Express"],
-        link: "https://github.com/kunjpatel/ecommerce"
-      },
-      {
-        name: "ML Price Prediction",
-        description: "Machine learning model to predict housing prices",
-        technologies: ["Python", "Scikit-learn", "Pandas", "Matplotlib"],
-        link: "https://github.com/kunjpatel/ml-housing"
-      },
-      {
-        name: "Task Management App",
-        description: "Mobile task management application with React Native",
-        technologies: ["React Native", "Firebase", "Redux"],
-        link: "https://github.com/kunjpatel/taskapp"
-      }
-    ],
-    achievements: [
-      "Won Smart India Hackathon 2022",
-      "Google Cloud Certification",
-      "1st place in College Coding Competition"
-    ],
-    stats: {
-      problemsSolved: 248,
-      quizzesTaken: 18,
-      companiesApplied: 7,
-      mockInterviews: 3
-    }
-  });
-
-  // Load profile data from localStorage if available
   useEffect(() => {
-    const loadSavedProfile = () => {
+    let isMounted = true;
+    const resolvedEmail =
+      user?.email ||
+      (typeof window !== "undefined"
+        ? window.localStorage.getItem("userEmail")
+        : null);
+
+    const hydrateProfile = async () => {
+      setLoadingProfile(true);
       try {
-        const savedProfile = localStorage.getItem('userProfile');
-        if (savedProfile) {
-          const parsedProfile = JSON.parse(savedProfile);
-          console.log('Loading saved profile from localStorage:', parsedProfile);
-          
-          // Update the profile data with saved information
-          setProfileData(prev => ({
-            ...prev,
-            name: parsedProfile.fullName || prev.name,
-            email: parsedProfile.email || prev.email,
-            phone: parsedProfile.phoneNumber || parsedProfile.phone || prev.phone,
-            bio: parsedProfile.bio || prev.bio,
-            location: parsedProfile.address || prev.location,
-            profilePicture: parsedProfile.profilePictureUrl || parsedProfile.profilePicture,
-            // Map additional fields from complete profile
-            gender: parsedProfile.gender,
-            dateOfBirth: parsedProfile.dateOfBirth,
-            username: parsedProfile.username,
-            isProfileComplete: parsedProfile.isProfileComplete,
-            profileCompletedAt: parsedProfile.profileCompletedAt
-          }));
+        const result = await loadUserProfile(resolvedEmail || undefined);
+        if (!isMounted) {
+          return;
         }
+
+        if (result.profile) {
+          setProfileData((prev) => mergeProfileState(prev, result.profile));
+        }
+
+        setCloudWarning(Boolean(result.firebaseUnavailable));
       } catch (error) {
-        console.error('Error loading saved profile:', error);
+        if (!isMounted) {
+          return;
+        }
+        console.warn("Failed to hydrate profile, using cached data", error);
+        setCloudWarning(true);
+      } finally {
+        if (isMounted) {
+          setLoadingProfile(false);
+        }
       }
     };
 
-    loadSavedProfile();
-  }, []);
+    hydrateProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.email]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -136,8 +260,21 @@ const Profile = () => {
     { id: "achievements", label: "Achievements" }
   ];
 
-  const limitedSkills = showAllSkills ? profileData.skills : profileData.skills.slice(0, 6);
-  const limitedProjects = showAllProjects ? profileData.projects : profileData.projects.slice(0, 2);
+  const skillsList = Array.isArray(profileData.skills) ? profileData.skills : [];
+  const projectsList = Array.isArray(profileData.projects) ? profileData.projects : [];
+  const limitedSkills = showAllSkills ? skillsList : skillsList.slice(0, 6);
+  const limitedProjects = showAllProjects ? projectsList : projectsList.slice(0, 2);
+  const lastSyncedLabel = profileData.lastSyncedAt || profileData.updatedAt;
+  const lastSyncedDisplay = (() => {
+    if (!lastSyncedLabel) {
+      return null;
+    }
+    const parsed = new Date(lastSyncedLabel);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+    return parsed.toLocaleString();
+  })();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -164,13 +301,39 @@ const Profile = () => {
           Manage your profile and showcase your skills to recruiters
         </p>
 
+        {loadingProfile && (
+          <div className="mt-4 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800 dark:border-indigo-400/30 dark:bg-indigo-500/10 dark:text-indigo-200">
+            Loading your profile details...
+          </div>
+        )}
+
+        {!loadingProfile && cloudWarning && (
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-200">
+            Cloud sync is currently unavailable. Showing the most recent data from this device.
+          </div>
+        )}
+
+        {!loadingProfile && !cloudWarning && lastSyncedDisplay && (
+          <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-400/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+            Profile last synced at {lastSyncedDisplay}
+          </div>
+        )}
+
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar - Profile Card */}
           <div className="lg:w-1/3">
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 sticky top-24">
               <div className="flex flex-col items-center text-center mb-6">
-                <div className="w-32 h-32 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mb-4 relative">
-                  <User size={64} className="text-indigo-500" />
+                <div className="w-32 h-32 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mb-4 relative overflow-hidden">
+                  {profileData.profilePictureUrl ? (
+                    <img
+                      src={profileData.profilePictureUrl}
+                      alt={`${profileData.name}'s profile`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <User size={64} className="text-indigo-500" />
+                  )}
                   <div className="absolute bottom-0 right-0">
                     <button
                       className="bg-indigo-600 text-white p-2 rounded-full"
@@ -194,7 +357,11 @@ const Profile = () => {
                   </div>
                 </div>
                 <h2 className="text-2xl font-bold">{profileData.name}</h2>
-                <p className="text-slate-600 dark:text-slate-400 mt-1">{profileData.department} Student</p>
+                <p className="text-slate-600 dark:text-slate-400 mt-1">
+                  {profileData.department
+                    ? `${profileData.department} Student`
+                    : profileData.occupation || ""}
+                </p>
                 <p className="text-slate-500 dark:text-slate-500 text-sm mt-2">{profileData.bio}</p>
               </div>
 

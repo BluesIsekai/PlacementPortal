@@ -97,7 +97,7 @@ const ProtectedRoute = ({ children }) => {
   const protectedPaths = ['/dashboard', '/profile', '/settings', '/notifications', '/quizzes', '/companies', '/coding', '/reports', '/schedule', '/progress-report', '/complete-profile', '/search', '/explore'];
   
   // If not authenticated and trying to access protected route, redirect to login
-  if (!authState.isAuthenticated && protectedPaths.includes(location.pathname)) {
+  if (!authState.isAuthenticated && !isAuthenticated && protectedPaths.includes(location.pathname)) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

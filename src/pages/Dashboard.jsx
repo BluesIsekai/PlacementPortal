@@ -1,15 +1,18 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, Mail, X, Menu, ChevronDown, GraduationCap, Target, TrendingUp, BookOpen, Users, Award, ChevronRight, Sparkles, Star, Search, Compass } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import SearchBar from "../components/SearchBar";
 import Footer from "./Footer";
+import { ensureCodingProgress, INITIAL_CODING_STATS } from "../utils/codingProgress";
+import { isFirebaseConfigured } from "../lib/firebase";
 
 // Helper Components
 const GoalProgress = ({ title, completed, total }) => {
   const theme = useTheme();
-  const percentage = (completed / total) * 100;
+  const safeTotal = total > 0 ? total : 1;
+  const percentage = Math.min(100, (completed / safeTotal) * 100);
   
   return (
     <div className={`${theme.bg.tertiary} rounded-xl p-3 ${theme.border.primary} border`}>
@@ -249,6 +252,9 @@ const PlacementPortalDashboard = () => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [isLoading, setIsLoading] = useState(true);
+  const [codingStats, setCodingStats] = useState(() => ({ ...INITIAL_CODING_STATS }));
+  const [codingStatsLoading, setCodingStatsLoading] = useState(true);
+  const [codingFirebaseUnavailable, setCodingFirebaseUnavailable] = useState(!isFirebaseConfigured);
   const profileRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -295,13 +301,85 @@ const PlacementPortalDashboard = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!user?.email) {
+      setCodingStats({ ...INITIAL_CODING_STATS });
+      setCodingStatsLoading(false);
+      return;
+    }
+
+    let active = true;
+
+    const loadCodingStats = async () => {
+      setCodingStatsLoading(true);
+      try {
+        const data = await ensureCodingProgress(user.email);
+        if (!active) return;
+        if (data.firebaseUnavailable) {
+          setCodingFirebaseUnavailable(true);
+        } else {
+          setCodingFirebaseUnavailable(false);
+          setCodingStats({ ...INITIAL_CODING_STATS, ...(data.stats || {}) });
+        }
+      } catch (error) {
+        console.error("Failed to load coding statistics", error);
+      } finally {
+        if (active) {
+          setCodingStatsLoading(false);
+        }
+      }
+    };
+
+    loadCodingStats();
+    return () => {
+      active = false;
+    };
+  }, [user?.email]);
+
   // Stats for the dashboard
-  const dashboardStats = [
-    { title: "Coding Streak", value: "12 days", icon: <TrendingUp size={16} />, change: "+3", positive: true },
-    { title: "Avg Quiz Score", value: "76%", icon: <BarChart3 size={16} />, change: "+5%", positive: true },
-    { title: "Applications", value: "27", icon: <Mail size={16} />, change: "+8", positive: true },
-    { title: "Skills Mastered", value: "18/30", icon: <Award size={16} />, change: "+4", positive: true },
-  ];
+  const dashboardStats = useMemo(() => {
+    const loadingValue = "--";
+    return [
+      {
+        title: "Problems Solved",
+        value: codingStatsLoading ? loadingValue : String(codingStats.problemsSolved),
+        icon: <TrendingUp size={16} />,
+        change: codingStatsLoading ? "" : `${codingStats.problemsSolved >= 1 ? "On track" : "Start now"}`,
+        positive: true,
+      },
+      {
+        title: "Easy Solved",
+        value: codingStatsLoading ? loadingValue : String(codingStats.easySolved),
+        icon: <Code2 size={16} />,
+        change: codingStatsLoading ? "" : `Goal 25`,
+        positive: true,
+      },
+      {
+        title: "Medium Solved",
+        value: codingStatsLoading ? loadingValue : String(codingStats.mediumSolved),
+        icon: <BarChart3 size={16} />,
+        change: codingStatsLoading ? "" : `Goal 40`,
+        positive: true,
+      },
+      {
+        title: "Hard Solved",
+        value: codingStatsLoading ? loadingValue : String(codingStats.hardSolved),
+        icon: <Award size={16} />,
+        change: codingStatsLoading ? "" : `Goal 15`,
+        positive: true,
+      },
+    ];
+  }, [codingStats, codingStatsLoading]);
+
+  const dailyCodingTarget = 5;
+  const codingDailyProgress = Math.min(codingStats.problemsSolved, dailyCodingTarget);
+  const welcomeName = useMemo(() => {
+    if (!user) return "there";
+    if (user.name) return user.name.split(" ")[0];
+    if (user.fullName) return user.fullName.split(" ")[0];
+    if (user.email) return user.email.split("@")[0];
+    return "there";
+  }, [user]);
 
   if (isLoading) {
     return (
@@ -508,11 +586,17 @@ const PlacementPortalDashboard = () => {
       {/* Main Content */}
       <div className="mx-auto max-w-7xl px-4 py-6 flex-grow">
         <main className="space-y-6">
+          {codingFirebaseUnavailable && (
+            <div className={`rounded-xl border ${theme.border.primary} ${theme.bg.card} p-4 text-sm ${theme.text.secondary}`}>
+              Coding progress sync is unavailable because Firebase is not configured. Your local progress will reset if you clear browser storage.
+            </div>
+          )}
+
           {/* Dashboard Header with Tabs */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className={`text-2xl font-bold ${theme.text.primary}`}>Dashboard Overview</h1>
-              <p className={theme.text.tertiary}>Welcome back, Kunj! Here's your placement preparation status.</p>
+              <p className={theme.text.tertiary}>Welcome back, {welcomeName}! Here's your placement preparation status.</p>
             </div>
             
             <div className={`flex ${theme.bg.secondary} rounded-lg p-1 ${theme.border.primary} border`}>
@@ -540,12 +624,14 @@ const PlacementPortalDashboard = () => {
                   <div className={`p-2 ${theme.bg.tertiary} rounded-lg group-hover:bg-indigo-500/20 transition-colors`}>
                     {stat.icon}
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${stat.positive 
-                    ? (theme.isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-700') 
-                    : (theme.isDark ? 'bg-rose-900/30 text-rose-400' : 'bg-red-100 text-red-700')
-                  }`}>
-                    {stat.change}
-                  </span>
+                  {stat.change ? (
+                    <span className={`text-xs px-2 py-1 rounded-full ${stat.positive 
+                      ? (theme.isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-700') 
+                      : (theme.isDark ? 'bg-rose-900/30 text-rose-400' : 'bg-red-100 text-red-700')
+                    }`}>
+                      {stat.change}
+                    </span>
+                  ) : null}
                 </div>
                 <h3 className={`text-2xl font-bold mb-1 ${theme.text.primary}`}>{stat.value}</h3>
                 <p className={`text-sm ${theme.text.tertiary}`}>{stat.title}</p>
@@ -560,7 +646,11 @@ const PlacementPortalDashboard = () => {
 
             {/* Progress section */}
             <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-3">
-              <GoalProgress title="Coding Problems" completed={5} total={10} />
+              <GoalProgress
+                title="Coding Problems"
+                completed={codingStatsLoading ? 0 : codingDailyProgress}
+                total={dailyCodingTarget}
+              />
               <GoalProgress title="Quiz Attempts" completed={1} total={2} />
               <GoalProgress title="Company Research" completed={2} total={5} />
             </div>

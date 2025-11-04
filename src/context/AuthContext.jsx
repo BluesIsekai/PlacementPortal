@@ -15,7 +15,6 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   // Check authentication status on app load
   useEffect(() => {
@@ -29,18 +28,26 @@ export const AuthProvider = ({ children }) => {
       const userName = localStorage.getItem('userName');
       const userData = localStorage.getItem('user');
 
-      if (token && userEmail) {
+      let storedUser = null;
+      if (userData) {
+        try {
+          storedUser = JSON.parse(userData);
+        } catch (error) {
+          console.warn('Failed to parse stored user data, clearing corrupted state');
+          localStorage.removeItem('user');
+        }
+      }
+
+      const hasProfile = storedUser?.isProfileComplete || localStorage.getItem('isProfileComplete') === 'true';
+
+      if (token && userEmail && hasProfile) {
         setIsAuthenticated(true);
         
         // Set user data from localStorage
         let userInfo = { email: userEmail };
         if (userName) userInfo.name = userName;
-        if (userData) {
-          try {
-            userInfo = { ...userInfo, ...JSON.parse(userData) };
-          } catch (e) {
-            console.warn('Failed to parse stored user data');
-          }
+        if (storedUser) {
+          userInfo = { ...userInfo, ...storedUser };
         }
         setUser(userInfo);
       } else {
