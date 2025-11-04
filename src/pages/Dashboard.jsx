@@ -253,6 +253,7 @@ const AIChatWidget = () => {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const messagesEndRef = useRef(null);
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
@@ -337,11 +338,103 @@ const AIChatWidget = () => {
     handleSend();
   };
 
+  const CodeBlock = ({ language, code }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = async () => {
+      try {
+        await navigator.clipboard.writeText(code.trimEnd());
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1600);
+      } catch (err) {
+        console.error("Copy failed", err);
+      }
+    };
+
+    return (
+      <div className="relative mt-3 text-left">
+        <div className="flex items-center justify-between px-1 text-[11px] uppercase tracking-wide">
+          <span className="text-indigo-300">{language || "code"}</span>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="rounded-md border border-slate-700 bg-slate-800 px-2 py-0.5 text-[10px] font-medium text-slate-200 transition-colors hover:border-indigo-500 hover:text-white"
+          >
+            {copied ? "Copied" : "Copy"}
+          </button>
+        </div>
+        <pre
+          className="mt-1 overflow-x-auto rounded-md border border-slate-700 bg-[#1e1e1e] p-3 text-xs text-[#d4d4d4] shadow-inner"
+          style={{
+            fontFamily: "'Consolas', 'Monaco', 'Source Code Pro', 'Fira Code', monospace",
+            lineHeight: 1.5,
+            whiteSpace: "pre",
+          }}
+        >
+          <code>{code.replace(/\s+$/, "")}</code>
+        </pre>
+      </div>
+    );
+  };
+
+  const renderMessageContent = (content) => {
+    if (!content.includes("```")) {
+      const lines = content.split("\n");
+      return lines.map((line, index) => (
+        <React.Fragment key={`plain-${index}`}>
+          {line}
+          {index !== lines.length - 1 && <br />}
+        </React.Fragment>
+      ));
+    }
+
+    const segments = content.split(/```/);
+    const elements = [];
+
+    segments.forEach((segment, index) => {
+      if (index % 2 === 1) {
+        let codeBlock = segment;
+        let language = "";
+
+        const firstNewline = segment.indexOf("\n");
+        if (firstNewline > -1) {
+          const maybeLang = segment.slice(0, firstNewline).trim();
+          if (maybeLang && !maybeLang.includes("\n")) {
+            language = maybeLang;
+            codeBlock = segment.slice(firstNewline + 1);
+          }
+        }
+
+        const cleanedCode = codeBlock.replace(/```/g, "").replace(/\n+$/g, "");
+
+        elements.push(
+          <CodeBlock key={`code-${index}`} language={language} code={cleanedCode} />
+        );
+      } else {
+        const lines = segment.split("\n");
+        lines.forEach((line, lineIndex) => {
+          elements.push(
+            <React.Fragment key={`text-${index}-${lineIndex}`}>
+              {line}
+              {lineIndex !== lines.length - 1 && <br />}
+            </React.Fragment>
+          );
+        });
+      }
+    });
+
+    return elements;
+  };
+
   return (
     <div className="fixed bottom-4 right-4 z-50">
       {isOpen ? (
         <div
-          className={`flex h-[420px] w-72 sm:w-80 flex-col overflow-hidden rounded-xl border ${theme.border.primary} ${theme.bg.card} ${theme.shadow.card}`}
+          className={`flex flex-col overflow-hidden rounded-xl border ${theme.border.primary} ${theme.bg.card} ${theme.shadow.card} transition-all duration-300 ${
+            isFocused
+              ? "h-[620px] w-[420px] sm:w-[540px]"
+              : "h-[480px] w-80 sm:w-[440px]"
+          }`}
         >
           <div className={`flex items-center justify-between px-3 py-2 ${theme.bg.secondary}`}>
             <div className="flex items-center gap-2">
@@ -372,7 +465,7 @@ const AIChatWidget = () => {
                       : `${theme.bg.tertiary} ${theme.text.primary}`
                   }`}
                 >
-                  {message.content}
+                  {renderMessageContent(message.content)}
                 </div>
               </div>
             ))}
@@ -399,6 +492,8 @@ const AIChatWidget = () => {
               }}
               placeholder={apiKey ? "Ask about placements, interviews, etc." : "Add VITE_GEMINI_API_KEY to enable chat."}
               className={`h-20 w-full resize-none rounded-lg border ${theme.border.primary} ${theme.bg.primary} ${theme.text.primary} px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
               disabled={!apiKey || isLoading}
             />
             <div className="mt-2 flex items-center justify-between">
