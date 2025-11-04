@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, Mail, X, Menu, ChevronDown, GraduationCap, Target, TrendingUp, BookOpen, Users, Award, ChevronRight, Sparkles, Star, Search, Compass } from "lucide-react";
+import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, Mail, X, Menu, ChevronDown, GraduationCap, Target, TrendingUp, BookOpen, Users, Award, ChevronRight, Sparkles, Star, Search, Compass, MessageCircle, Send, Bot, Loader2 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
@@ -238,6 +238,197 @@ const PerformanceOverview = () => {
         <span className={`text-sm ${theme.text.secondary}`}>Success Rate: 12%</span>
       </div>
     </section>
+  );
+};
+
+const AIChatWidget = () => {
+  const theme = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    {
+      role: "assistant",
+      content:
+        "Hi! I'm your placement mentor. Ask about quizzes, companies, or interview prep and I'll help you out.",
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+  useEffect(() => {
+    if (isOpen && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isOpen]);
+
+  const handleSend = async () => {
+    const trimmed = input.trim();
+    if (!trimmed || isLoading) return;
+
+    const pendingMessages = [...messages, { role: "user", content: trimmed }];
+    setInput("");
+
+    if (!apiKey) {
+      setMessages([
+        ...pendingMessages,
+        {
+          role: "assistant",
+          content: "Missing Google AI Studio API key. Add VITE_GEMINI_API_KEY to your environment and reload.",
+        },
+      ]);
+      return;
+    }
+
+    setMessages(pendingMessages);
+    setIsLoading(true);
+
+    try {
+      const contents = pendingMessages.map((message) => ({
+        role: message.role === "assistant" ? "model" : "user",
+        parts: [{ text: message.content }],
+      }));
+
+      // Calls Google AI Studio (Gemini) API for chat completions.
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ contents }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => null);
+        const message = errorPayload?.error?.message || "Failed to fetch response";
+        throw new Error(message);
+      }
+
+      const data = await response.json();
+      const text =
+        data?.candidates?.[0]?.content?.parts
+          ?.map((part) => part.text)
+          .filter(Boolean)
+          .join("\n")?.trim() ||
+        "I couldn't find the right answer. Try asking in a different way.";
+
+      setMessages((prev) => [...prev, { role: "assistant", content: text }]);
+    } catch (error) {
+      console.error("Placement AI chat error", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "Something went wrong while reaching the AI service. " +
+            (error instanceof Error ? error.message : "Please try again soon."),
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    handleSend();
+  };
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50">
+      {isOpen ? (
+        <div
+          className={`flex h-[420px] w-72 sm:w-80 flex-col overflow-hidden rounded-xl border ${theme.border.primary} ${theme.bg.card} ${theme.shadow.card}`}
+        >
+          <div className={`flex items-center justify-between px-3 py-2 ${theme.bg.secondary}`}>
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-9 rounded-lg bg-indigo-500/20 grid place-content-center">
+                <Bot size={18} className="text-indigo-400" />
+              </div>
+              <div>
+                <p className={`text-sm font-semibold ${theme.text.primary}`}>AI Helper</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className={`${theme.text.secondary} hover:text-rose-400 transition-colors`}
+              aria-label="Close chat"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          <div className={`flex-1 space-y-2 overflow-y-auto px-3 py-3 ${theme.bg.primary}`}>
+            {messages.map((message, index) => (
+              <div key={`${message.role}-${index}`} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[75%] rounded-lg px-3 py-2 text-sm leading-snug shadow-sm ${
+                    message.role === "user"
+                      ? "bg-indigo-600 text-white"
+                      : `${theme.bg.tertiary} ${theme.text.primary}`
+                  }`}
+                >
+                  {message.content}
+                </div>
+              </div>
+            ))}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${theme.bg.tertiary} ${theme.text.primary}`}>
+                  <Loader2 size={16} className="animate-spin" />
+                  Thinking...
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <form onSubmit={handleSubmit} className={`border-t ${theme.border.primary} ${theme.bg.secondary} p-3`}>
+            <textarea
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder={apiKey ? "Ask about placements, interviews, etc." : "Add VITE_GEMINI_API_KEY to enable chat."}
+              className={`h-20 w-full resize-none rounded-lg border ${theme.border.primary} ${theme.bg.primary} ${theme.text.primary} px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+              disabled={!apiKey || isLoading}
+            />
+            <div className="mt-2 flex items-center justify-between">
+              <span className={`text-[11px] ${theme.text.muted}`}>Shift+Enter for newline</span>
+              <button
+                type="submit"
+                disabled={!input.trim() || isLoading || !apiKey}
+                className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                  !input.trim() || isLoading || !apiKey
+                    ? `${theme.bg.hover} ${theme.text.muted} cursor-not-allowed`
+                    : "bg-indigo-600 text-white hover:bg-indigo-500"
+                }`}
+              >
+                <Send size={15} />
+                Send
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-indigo-600/30 transition-transform hover:scale-105"
+        >
+          <MessageCircle size={18} />
+          Ask Placement AI
+        </button>
+      )}
+    </div>
   );
 };
 
@@ -702,6 +893,8 @@ const PlacementPortalDashboard = () => {
 
       {/* Footer */}
       <Footer />
+
+      <AIChatWidget />
     </div>
   );
 };
