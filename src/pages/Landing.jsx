@@ -288,7 +288,7 @@ const LandingPage = () => {
               Login
             </button>
             <button 
-              onClick={() => navigate('/signup')}
+              onClick={() => navigate('/register')}
               className={`px-4 py-2 rounded-lg ${darkTheme.bg.buttonSecondary} border ${darkTheme.border.primary} ${darkTheme.bg.buttonSecondaryHover} transition-colors font-medium hover:scale-105 transform duration-200`}
             >
               Sign Up
@@ -890,71 +890,6 @@ const LandingPage = () => {
           transition: transform 0.1s ease-out;
         }
       `}</style>
-      {/* Demo Controls for Testing */}
-      <div className="fixed bottom-4 right-4 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 border border-gray-200 dark:border-gray-700 z-50">
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Demo Controls</h3>
-        <div className="space-y-2">
-          <button
-            onClick={() => {
-              localStorage.setItem('token', 'demo-jwt-token-' + Date.now());
-              localStorage.setItem('userEmail', 'demo@example.com');
-              localStorage.removeItem('isProfileComplete');
-              localStorage.removeItem('userProfile');
-              window.location.href = '/complete-profile';
-            }}
-            className="w-full text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded transition-colors"
-          >
-            🚀 Test Complete Profile Flow
-          </button>
-          <button
-            onClick={async () => {
-              try {
-                const testData = {
-                  name: 'Demo User',
-                  email: 'demo' + Date.now() + '@example.com',
-                  password: 'password123',
-                  confirmPassword: 'password123'
-                };
-                
-                const response = await fetch('http://localhost:5000/api/auth/register', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(testData)
-                });
-                
-                const data = await response.json();
-                if (response.ok) {
-                  localStorage.setItem('token', data.token);
-                  localStorage.setItem('userEmail', data.user.email);
-                  alert('✅ Registration test successful! Redirecting to complete profile...');
-                  window.location.href = '/complete-profile';
-                } else {
-                  alert('❌ Registration test failed: ' + data.message);
-                }
-              } catch (error) {
-                alert('🚨 Network error: ' + error.message);
-              }
-            }}
-            className="w-full text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded transition-colors"
-          >
-            🧪 Test Registration API
-          </button>
-          <button
-            onClick={() => {
-              localStorage.removeItem('isProfileComplete');
-              localStorage.removeItem('userProfile');
-              localStorage.removeItem('token');
-              localStorage.removeItem('authToken');
-              localStorage.removeItem('userEmail');
-              alert('Profile reset! You can now test the first-time user flow. Please refresh the page and try logging in.');
-            }}
-            className="w-full text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded transition-colors"
-          >
-            🔄 Reset Profile Data
-          </button>
-        </div>
-      </div>
-      
     </div>
   );
 };// Custom Icons

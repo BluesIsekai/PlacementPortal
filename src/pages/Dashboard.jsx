@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, Mail, X, Menu, ChevronDown, GraduationCap, Target, TrendingUp, BookOpen, Users, Award, ChevronRight, Sparkles, Star, Search, Compass } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, Mail, X, Menu, ChevronDown, GraduationCap, Target, TrendingUp, BookOpen, Users, Award, ChevronRight, Sparkles, Star, Search, Compass, MessageCircle, Send, Bot, Loader2 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
@@ -241,6 +243,292 @@ const PerformanceOverview = () => {
         <span className={`text-sm ${theme.text.secondary}`}>Success Rate: 12%</span>
       </div>
     </section>
+  );
+};
+
+const AIChatWidget = () => {
+  const theme = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    {
+      role: "assistant",
+      content:
+        "Hi! I'm your placement mentor. Ask about quizzes, companies, or interview prep and I'll help you out.",
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const messagesEndRef = useRef(null);
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+  useEffect(() => {
+    if (isOpen && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isOpen]);
+
+  const handleSend = async () => {
+    const trimmed = input.trim();
+    if (!trimmed || isLoading) return;
+
+    const pendingMessages = [...messages, { role: "user", content: trimmed }];
+    setInput("");
+
+    if (!apiKey) {
+      setMessages([
+        ...pendingMessages,
+        {
+          role: "assistant",
+          content: "Missing Google AI Studio API key. Add VITE_GEMINI_API_KEY to your environment and reload.",
+        },
+      ]);
+      return;
+    }
+
+    setMessages(pendingMessages);
+    setIsLoading(true);
+
+    try {
+      const contents = pendingMessages.map((message) => ({
+        role: message.role === "assistant" ? "model" : "user",
+        parts: [{ text: message.content }],
+      }));
+
+      // Calls Google AI Studio (Gemini) API for chat completions.
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ contents }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => null);
+        const message = errorPayload?.error?.message || "Failed to fetch response";
+        throw new Error(message);
+      }
+
+      const data = await response.json();
+      const text =
+        data?.candidates?.[0]?.content?.parts
+          ?.map((part) => part.text)
+          .filter(Boolean)
+          .join("\n")?.trim() ||
+        "I couldn't find the right answer. Try asking in a different way.";
+
+      setMessages((prev) => [...prev, { role: "assistant", content: text }]);
+    } catch (error) {
+      console.error("Placement AI chat error", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "Something went wrong while reaching the AI service. " +
+            (error instanceof Error ? error.message : "Please try again soon."),
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    handleSend();
+  };
+
+  const CodeBlock = ({ language, code }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = async () => {
+      try {
+        await navigator.clipboard.writeText(code.trimEnd());
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1600);
+      } catch (err) {
+        console.error("Copy failed", err);
+      }
+    };
+
+    return (
+      <div className="relative mt-3 text-left">
+        <div className="flex items-center justify-between px-1 text-[11px] uppercase tracking-wide">
+          <span className="text-indigo-300">{language || "code"}</span>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="rounded-md border border-slate-700 bg-slate-800 px-2 py-0.5 text-[10px] font-medium text-slate-200 transition-colors hover:border-indigo-500 hover:text-white"
+          >
+            {copied ? "Copied" : "Copy"}
+          </button>
+        </div>
+        <pre
+          className="mt-1 overflow-x-auto rounded-md border border-slate-700 bg-[#1e1e1e] p-3 text-xs text-[#d4d4d4] shadow-inner"
+          style={{
+            fontFamily: "'Consolas', 'Monaco', 'Source Code Pro', 'Fira Code', monospace",
+            lineHeight: 1.5,
+            whiteSpace: "pre",
+          }}
+        >
+          <code>{code.replace(/\s+$/, "")}</code>
+        </pre>
+      </div>
+    );
+  };
+
+  const renderMessageContent = (content) => {
+    if (!content.includes("```")) {
+      const lines = content.split("\n");
+      return lines.map((line, index) => (
+        <React.Fragment key={`plain-${index}`}>
+          {line}
+          {index !== lines.length - 1 && <br />}
+        </React.Fragment>
+      ));
+    }
+
+    const segments = content.split(/```/);
+    const elements = [];
+
+    segments.forEach((segment, index) => {
+      if (index % 2 === 1) {
+        let codeBlock = segment;
+        let language = "";
+
+        const firstNewline = segment.indexOf("\n");
+        if (firstNewline > -1) {
+          const maybeLang = segment.slice(0, firstNewline).trim();
+          if (maybeLang && !maybeLang.includes("\n")) {
+            language = maybeLang;
+            codeBlock = segment.slice(firstNewline + 1);
+          }
+        }
+
+        const cleanedCode = codeBlock.replace(/```/g, "").replace(/\n+$/g, "");
+
+        elements.push(
+          <CodeBlock key={`code-${index}`} language={language} code={cleanedCode} />
+        );
+      } else {
+        const lines = segment.split("\n");
+        lines.forEach((line, lineIndex) => {
+          elements.push(
+            <React.Fragment key={`text-${index}-${lineIndex}`}>
+              {line}
+              {lineIndex !== lines.length - 1 && <br />}
+            </React.Fragment>
+          );
+        });
+      }
+    });
+
+    return elements;
+  };
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50">
+      {isOpen ? (
+        <div
+          className={`flex flex-col overflow-hidden rounded-xl border ${theme.border.primary} ${theme.bg.card} ${theme.shadow.card} transition-all duration-300 ${
+            isFocused
+              ? "h-[620px] w-[420px] sm:w-[540px]"
+              : "h-[480px] w-80 sm:w-[440px]"
+          }`}
+        >
+          <div className={`flex items-center justify-between px-3 py-2 ${theme.bg.secondary}`}>
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-9 rounded-lg bg-indigo-500/20 grid place-content-center">
+                <Bot size={18} className="text-indigo-400" />
+              </div>
+              <div>
+                <p className={`text-sm font-semibold ${theme.text.primary}`}>AI Helper</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className={`${theme.text.secondary} hover:text-rose-400 transition-colors`}
+              aria-label="Close chat"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          <div className={`flex-1 space-y-2 overflow-y-auto px-3 py-3 ${theme.bg.primary}`}>
+            {messages.map((message, index) => (
+              <div key={`${message.role}-${index}`} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[75%] rounded-lg px-3 py-2 text-sm leading-snug shadow-sm ${
+                    message.role === "user"
+                      ? "bg-indigo-600 text-white"
+                      : `${theme.bg.tertiary} ${theme.text.primary}`
+                  }`}
+                >
+                  {renderMessageContent(message.content)}
+                </div>
+              </div>
+            ))}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${theme.bg.tertiary} ${theme.text.primary}`}>
+                  <Loader2 size={16} className="animate-spin" />
+                  Thinking...
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <form onSubmit={handleSubmit} className={`border-t ${theme.border.primary} ${theme.bg.secondary} p-3`}>
+            <textarea
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder={apiKey ? "Ask about placements, interviews, etc." : "Add VITE_GEMINI_API_KEY to enable chat."}
+              className={`h-20 w-full resize-none rounded-lg border ${theme.border.primary} ${theme.bg.primary} ${theme.text.primary} px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              disabled={!apiKey || isLoading}
+            />
+            <div className="mt-2 flex items-center justify-between">
+              <span className={`text-[11px] ${theme.text.muted}`}>Shift+Enter for newline</span>
+              <button
+                type="submit"
+                disabled={!input.trim() || isLoading || !apiKey}
+                className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                  !input.trim() || isLoading || !apiKey
+                    ? `${theme.bg.hover} ${theme.text.muted} cursor-not-allowed`
+                    : "bg-indigo-600 text-white hover:bg-indigo-500"
+                }`}
+              >
+                <Send size={15} />
+                Send
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-indigo-600/30 transition-transform hover:scale-105"
+        >
+          <MessageCircle size={18} />
+          Ask Placement AI
+        </button>
+      )}
+    </div>
   );
 };
 
@@ -792,6 +1080,8 @@ const PlacementPortalDashboard = () => {
 
       {/* Footer */}
       <Footer />
+
+      <AIChatWidget />
     </div>
   );
 };
