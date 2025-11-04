@@ -1,7 +1,37 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, Mail, X, Menu, ChevronDown, GraduationCap, Target, TrendingUp, BookOpen, Users, Award, ChevronRight, Sparkles, Star, Search, Compass } from "lucide-react";
-import React, { useState, useRef, useEffect } from "react";
-import { LayoutDashboard, Code2, Building2, FileText, BarChart3, Bell, Moon, Sun, Settings, LogOut, User, Calendar, Mail, X, Menu, ChevronDown, GraduationCap, Target, TrendingUp, BookOpen, Users, Award, ChevronRight, Sparkles, Star, Search, Compass, MessageCircle, Send, Bot, Loader2 } from "lucide-react";
+import {
+  LayoutDashboard,
+  Code2,
+  Building2,
+  FileText,
+  BarChart3,
+  Bell,
+  Moon,
+  Sun,
+  Settings,
+  LogOut,
+  User,
+  Calendar,
+  Mail,
+  X,
+  Menu,
+  ChevronDown,
+  GraduationCap,
+  Target,
+  TrendingUp,
+  BookOpen,
+  Users,
+  Award,
+  ChevronRight,
+  Sparkles,
+  Star,
+  Search,
+  Compass,
+  MessageCircle,
+  Send,
+  Bot,
+  Loader2,
+} from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
